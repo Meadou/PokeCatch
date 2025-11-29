@@ -3,8 +3,9 @@ public class Main {
         System.out.println("Welcome to PokeCatch!");
         System.out.println("marjhun gaming");
         // task 1 marjhun pamilar 
+        // task 1 marjhun
         // task 2 Charmander Shiny
         // task 3 Shiny Magicarp
-        // task 4
+        // task 4 bulbasaur 
     }
 }

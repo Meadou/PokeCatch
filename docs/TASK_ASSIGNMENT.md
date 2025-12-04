@@ -8,7 +8,7 @@ make pokemon appear randomly at different location
 make it clickable
 
 ## Bontuyan task 
-create an intro panel 
+create an Intro panel 
 store the starter pokemon in a variable for later use
 
 ## Novabos task

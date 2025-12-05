@@ -43,7 +43,7 @@ public class Intro {
     }
 
     private void GUI() {
-        frame = new JFrame("Slideshow with Navigation");
+        frame = new JFrame("PokeCatch Intro");
         frame.setSize(1280, 720);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);

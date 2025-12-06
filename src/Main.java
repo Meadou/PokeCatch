@@ -27,5 +27,7 @@ public class Main {
         // task 3 Shiny Magicarp
         // task 4 bulbasaur
         System.out.println("Welcome to PokeCatch!");
+        System.out.println("marjhun gaming");
+
     }
 }

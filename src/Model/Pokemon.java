@@ -6,7 +6,7 @@ public class Pokemon {
     Types type;
     Types type2;
     int duplicates;
-    
+
     public Pokemon(int id, String name, Types type, Types type2) {
         this.pokemonID = id;
         this.name = name;
@@ -38,8 +38,6 @@ enum Types {
     ROCK,
     GHOST,
     DRAGON,
-    DARK,
     STEEL,
-    FAIRY
 }
 

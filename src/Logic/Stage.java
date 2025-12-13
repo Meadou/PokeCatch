@@ -1,6 +1,8 @@
-package pkmn;
+package Logic;
 
 import java.util.ArrayList;
+
+import pkmn.Pokemon;
 
 public class Stage {
     public int score;

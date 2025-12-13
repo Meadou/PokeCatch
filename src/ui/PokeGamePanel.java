@@ -2,14 +2,18 @@ package ui;
 import javax.swing.*;
 
 import Logic.Logic;
+import Logic.Stage;
 import Logic.Util;
 import pkmn.Pokemon;
-import pkmn.Stage;
 
 import java.awt.*;
 import java.util.ArrayList;
+import Logic.GameState;
+
 
 public class PokeGamePanel extends JFrame {
+    JLabel scoreLabel;
+    GameState gameState = GameState.getInstance();
 
     Util util = new Util();
     Logic logic = new Logic();
@@ -32,12 +36,18 @@ public class PokeGamePanel extends JFrame {
         this.setContentPane(bgPanel);
 
         timerLabel = new JLabel("Time: " + gameTime);
-        timerLabel.setBounds(10, 10, 200, 30);
+        timerLabel.setBounds(1080, 10, 180, 30);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 20));
         timerLabel.setForeground(Color.WHITE);
         bgPanel.add(timerLabel);
 
-        spawner(stage.stagePokemon);
+        scoreLabel = new JLabel("Score: " + gameState.getGlobalScore());
+        scoreLabel.setBounds(10, 10, 250, 30);
+        scoreLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        scoreLabel.setForeground(Color.WHITE);
+        bgPanel.add(scoreLabel);
+
+
         spawner(stage.stagePokemon);
 
         gameTimer = new Timer(1000, e -> {
@@ -63,7 +73,6 @@ public class PokeGamePanel extends JFrame {
 
 
     public void spawnPokemonButton(ArrayList<Pokemon> pokemonList) {
-        Pokemon pokemon = logic.randomizer(pokemonList);
 
         int buttonSize = 120;
 
@@ -73,36 +82,63 @@ public class PokeGamePanel extends JFrame {
         int x = (int) (Math.random() * maxX);
         int y = (int) (Math.random() * maxY);
 
-        String formattedID = String.format("%04d", pokemon.pokemonID);
-        String imagePath = "firered-leafgreen/" + formattedID + ".png";
+        JButton button = new JButton();
+        button.setBounds(x, y, buttonSize, buttonSize);
+        button.setBorder(null);
+        button.setContentAreaFilled(false);
 
-        ImageIcon icon = new ImageIcon(imagePath);
-        Image img = icon.getImage().getScaledInstance(buttonSize, buttonSize, Image.SCALE_SMOOTH);
-        icon = new ImageIcon(img);
+        boolean isBomb = Math.random() < 0.2; 
 
-        JButton newPokemonButton = new JButton();
-        newPokemonButton.setIcon(icon);
-        newPokemonButton.setBounds(x, y, buttonSize, buttonSize);
-        newPokemonButton.setBorder(null);
-        newPokemonButton.setContentAreaFilled(false);
+        if (isBomb) {
+            ImageIcon bombIcon = new ImageIcon(
+            getClass().getResource("bomb.png")
+        );
 
-        newPokemonButton.addActionListener(e -> {
-            this.remove(newPokemonButton);
+        Image bombImg = bombIcon.getImage().getScaledInstance(
+            buttonSize,
+            buttonSize,
+            Image.SCALE_SMOOTH
+        );
+
+        bombIcon = new ImageIcon(bombImg);
+        button.setIcon(bombIcon);
+
+
+            button.addActionListener(e -> {
+                gameTimer.stop();
+                endGame();
+            });
+
+        } else {
+            Pokemon pokemon = logic.randomizer(pokemonList);
+            String formattedID = String.format("%04d", pokemon.pokemonID);
+            String imagePath = "firered-leafgreen/" + formattedID + ".png";
+
+            ImageIcon icon = new ImageIcon(imagePath);
+            Image img = icon.getImage().getScaledInstance(buttonSize, buttonSize, Image.SCALE_SMOOTH);
+            button.setIcon(new ImageIcon(img));
+
+            button.addActionListener(e -> {
+            this.remove(button);
             this.repaint();
+
             logic.ListPokemon(pokemon);
             logic.displayList();
-            System.out.println();
+
+            gameState.addScore(100);
+            scoreLabel.setText("Score: " + gameState.getGlobalScore());
         });
 
-        this.add(newPokemonButton);
+        }
+
+        this.add(button);
         this.repaint();
 
-
         Timer timer = new Timer(1000, e -> {
-            this.remove(newPokemonButton);
+            this.remove(button);
             this.repaint();
         });
-        timer.setRepeats(false); 
+        timer.setRepeats(false);
         timer.start();
     }
 
@@ -114,6 +150,7 @@ public class PokeGamePanel extends JFrame {
         }
 
         JOptionPane.showMessageDialog(this, "Game Over!");
+        System.exit(0);
     }
 
     

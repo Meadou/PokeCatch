@@ -2,7 +2,6 @@ package ui;
 
 import java.util.Scanner;
 
-import pkmn.Stage;
 import Logic.*;
 
 public class GameRunner {

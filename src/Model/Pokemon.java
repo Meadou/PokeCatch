@@ -1,5 +1,7 @@
 package Model;
 
+import Logic.Types;
+
 public class Pokemon {
     public int pokemonID;
     public String name;

@@ -5,9 +5,8 @@ import javax.swing.*;
 
 import Logic.PokeTreeNode;
 import Logic.PokemonBST;
+import Logic.Util;
 import Model.Pokemon;
-import Model.Types;
-import Model.Util;
 
 public class PokedexFrame extends JFrame {
     private PokemonBST originalBst;
@@ -85,7 +84,7 @@ public class PokedexFrame extends JFrame {
         searchPanel.add(searchRow);
 
         // Type filter
-        String[] types = {"All", "NORMAL", "FIRE", "WATER", "GRASS", "ELECTRIC", "PSYCHIC", "GHOST"};
+        String[] types = {"All", "NORMAL", "FIRE", "WATER", "GRASS", "ELECTRIC", "ICE", "FIGHTING", "POISON", "GROUND", "FLYING", "PSYCHIC", "BUG", "ROCK", "GHOST", "DRAGON", "STEEL", "FAIRY"};
         typeFilter = new JComboBox<>(types);
         typeFilter.addActionListener(e -> onTypeFilterChanged());
         searchPanel.add(new JLabel("Filter by Type:"));
@@ -259,7 +258,7 @@ public class PokedexFrame extends JFrame {
 
     private void loadSampleData() {
         Util util = new Util();
-        java.util.ArrayList<Pokemon> allPokemon = util.initializePokemon();
+        java.util.ArrayList<Pokemon> allPokemon = util.initializeStage1Pokemon();
         
         // caught Pokemon IDs stored here in array (not sorted)
         int[] caughtIds = {1, 4, 7, 25, 6, 12, 15};

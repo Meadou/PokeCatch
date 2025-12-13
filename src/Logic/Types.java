@@ -1,4 +1,4 @@
-package Model;
+package Logic;
 
 public enum Types {
     NORMAL,
@@ -17,4 +17,5 @@ public enum Types {
     GHOST,
     DRAGON,
     STEEL,
+    FAIRY,
 }

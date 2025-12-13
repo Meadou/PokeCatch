@@ -1,7 +1,10 @@
-package Model;
+package Logic;
 
 import java.util.ArrayList;
 import java.util.Random;
+
+import pkmn.Pokemon;
+
 public class Logic {
     ArrayList<Pokemon> list = new ArrayList<>();
 

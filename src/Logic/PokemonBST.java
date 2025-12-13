@@ -154,8 +154,9 @@ public class PokemonBST {
         List<Pokemon> allPokemon = inOrder();
         
         for (Pokemon p : allPokemon) {
-            // Check if type matches (handle null type2)
-            if (p.type != null && p.type.toString().equals(type)) {
+            // Check if type matches (check both type and type2)
+            if ((p.type != null && p.type.toString().equals(type)) || 
+                (p.type2 != null && p.type2.toString().equals(type))) {
                 filtered.insert(p);
             }
         }

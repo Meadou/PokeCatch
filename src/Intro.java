@@ -7,7 +7,6 @@ import java.util.Objects;
 
 public class Intro {
 
-    // Fields
     private int currentIndex = 0;
     private BufferedImage[] storyImages;
     private BufferedImage[] pokemonStarterImages;
@@ -20,7 +19,7 @@ public class Intro {
     private int chosenStarterId = -1;
     private JPanel skipPanel;
     private Timer slideshowTimer;
-
+    private boolean isTransitioning = false;
 
     private final String[] captions = {
             "We are going on a field trip around the world, and all kinds of Pokemon out there awaits to be caught.",
@@ -265,13 +264,27 @@ public class Intro {
         skipButton.setFocusPainted(false);
 
         skipButton.addActionListener(e -> {
-            stopSlideshowAndCaptions();
-            if (skipPanel != null) {
-                frame.remove(skipPanel);
-                frame.revalidate();
-                frame.repaint();
+            if (isTransitioning) return;
+            int nextIndex = currentIndex + 1;
+            if (nextIndex >= storyImages.length) return;
+            isTransitioning = true;
+            if (slideshowTimer != null) {
+                slideshowTimer.stop();
             }
-            showPokemonStarterImages();
+
+            fadeTransition(storyImages[currentIndex], storyImages[nextIndex], () -> {
+                currentIndex = nextIndex;
+                if (currentIndex < captions.length) {
+                    updateCaption(currentIndex);
+                }
+                if (currentIndex < storyImages.length - 1) {
+                    isTransitioning = false;
+                    slideshowTimer.restart();
+                } else {
+                    stopSlideshowAndCaptions();
+                    showPokemonStarterImages();
+                }
+            });
         });
 
         skipPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));

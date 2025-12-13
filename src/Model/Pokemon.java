@@ -2,10 +2,11 @@ package Model;
 
 public class Pokemon {
     public int pokemonID;
-    String name;
-    Types type;
-    Types type2;
-    int duplicates;
+    public String name;
+    public Types type;
+    public Types type2;
+    public int duplicates;
+    private String imagePath;
 
     public Pokemon(int id, String name, Types type, Types type2) {
         this.pokemonID = id;
@@ -19,25 +20,31 @@ public class Pokemon {
         this.pokemonID = id;
         this.name = name;
         this.type = type;
+        this.duplicates = 1;
     }
-}
 
-enum Types {
-    NORMAL,
-    FIRE,
-    WATER,
-    GRASS,
-    ELECTRIC,
-    ICE,
-    FIGHTING,
-    POISON,
-    GROUND,
-    FLYING,
-    PSYCHIC,
-    BUG,
-    ROCK,
-    GHOST,
-    DRAGON,
-    STEEL,
+    public String getImagePath() {
+        return imagePath;
+    }
+
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public int getDuplicates() {
+        return this.duplicates;
+    }
+
+    public void incrementDuplicates() {
+        this.duplicates++;
+    }
+
+    public void decrementDuplicates() {
+        if (this.duplicates > 0) this.duplicates--;
+    }
 }
 

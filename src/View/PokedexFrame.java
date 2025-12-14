@@ -60,6 +60,36 @@ public class PokedexFrame extends JFrame {
         add(centerContainer, BorderLayout.CENTER);
 
         setVisible(true);
+        
+        // Set default traversal to root when opening
+        setTraversalToRoot();
+    }
+    
+    // Simple method to set traversal to root node
+    private void setTraversalToRoot() {
+        if (currentBst != null && currentBst.getRoot() != null) {
+            // Build the traversal list
+            buildPreorderList(currentBst.getRoot());
+            
+            // Set to root (first node in preorder)
+            if (!traversalList.isEmpty()) {
+                traversalIndex = 0;
+                PokeTreeNode rootNode = traversalList.get(0);
+                
+                // Highlight root node
+                treePanel.highlightNode = rootNode;
+                
+                // Update detail panel with root Pokemon
+                detailPanel.updateDetails(rootNode.pokemon);
+                
+                // Update status
+                statusLabel.setText("Step 1/" + traversalList.size() + ": " + rootNode.pokemon.getName());
+                
+                // Repaint and scroll to root
+                treePanel.repaint();
+                scrollToNode(rootNode);
+            }
+        }
     }
 
     private JPanel createLeftPanel() {
@@ -202,11 +232,10 @@ public class PokedexFrame extends JFrame {
         final int oldDepth = getDepth(currentBst.getRoot());
         
         // Replace tree panel with loading screen
-        final TreePanel oldTreePanel = treePanel;
         treePanel = new TreePanel(currentBst);
         
-        // Show loading screen
-        Loading_Screen loadingScreen = new Loading_Screen();
+        // Show loading screen (1.5 seconds, blue color 0x8BCFD9)
+        Loading_Screen loadingScreen = new Loading_Screen(1500, 0x8BCFD9);
         treeScrollPane.setViewportView(loadingScreen);
         
         // Use SwingWorker to perform balance operation in background
@@ -358,7 +387,6 @@ public class PokedexFrame extends JFrame {
     static class TreePanel extends JPanel {
         private PokemonBST bst;
         public PokeTreeNode highlightNode = null;
-        private java.util.Map<Integer, Image> imgCache = new java.util.HashMap<>();
 
         private int minX = Integer.MAX_VALUE;
         private int maxX = Integer.MIN_VALUE;
@@ -368,14 +396,38 @@ public class PokedexFrame extends JFrame {
         public TreePanel(PokemonBST bst) {
             this.bst = bst;
             setBackground(new Color(0x8BCFD9));
+            // Preload all images when panel is created
+            preloadAllImages();
         }
 
         public void setBst(PokemonBST bst) {
             this.bst = bst;
             highlightNode = null;
+            // Preload images for new BST
+            preloadAllImages();
             // Trigger recalculation of preferred size
             revalidate();
             repaint();
+        }
+
+        // Simple method to preload all images from the BST
+        private void preloadAllImages() {
+            if (bst == null || bst.getRoot() == null) {
+                return;
+            }
+            // Just load images for all nodes - simple approach
+            int diameter = 50;
+            preloadImagesFromNode(bst.getRoot(), diameter - 6, diameter - 6);
+        }
+
+        // Helper method to load images from all nodes in the tree
+        private void preloadImagesFromNode(PokeTreeNode node, int w, int h) {
+            if (node == null) return;
+            // Load image for this node
+            loadImageForId(node.pokemon.pokemonID, w, h);
+            // Load images for left and right children
+            preloadImagesFromNode(node.left, w, h);
+            preloadImagesFromNode(node.right, w, h);
         }
 
         @Override
@@ -477,11 +529,14 @@ public class PokedexFrame extends JFrame {
             // image inside node (if available)
             Image img = loadImageForId(node.pokemon.pokemonID, diameter - 6, diameter - 6);
             if (img != null) {
+                // Draw image in the center of the circle
                 int iw = img.getWidth(null);
                 int ih = img.getHeight(null);
-                int ix = node.x - iw / 2;
-                int iy = node.y - ih / 2;
-                g.drawImage(img, ix, iy, null);
+                if (iw > 0 && ih > 0) {
+                    int ix = node.x - iw / 2;
+                    int iy = node.y - ih / 2;
+                    g.drawImage(img, ix, iy, null);
+                }
             }
 
             // border on top
@@ -502,8 +557,6 @@ public class PokedexFrame extends JFrame {
         }
 
         private Image loadImageForId(int id, int targetW, int targetH) {
-            if (imgCache.containsKey(id)) return imgCache.get(id);
-
             String fileName = String.format("%04d.png", id);
             String userDir = System.getProperty("user.dir");
             String[] candidates = new String[] {
@@ -516,18 +569,23 @@ public class PokedexFrame extends JFrame {
             java.io.File found = null;
             for (String path : candidates) {
                 java.io.File f = new java.io.File(path);
-                if (f.exists()) { found = f; break; }
+                if (f.exists() && f.isFile()) { 
+                    found = f; 
+                    break; 
+                }
             }
 
-            Image scaled = null;
             if (found != null) {
+                // Use ImageIcon which handles loading automatically
                 ImageIcon ic = new ImageIcon(found.getAbsolutePath());
-                Image img = ic.getImage();
-                int iw = img.getWidth(null);
-                int ih = img.getHeight(null);
-                if (iw <= 0 || ih <= 0) {
-                    scaled = img.getScaledInstance(targetW, targetH, Image.SCALE_SMOOTH);
-                } else {
+                
+                // Check if image loaded properly
+                if (ic.getIconWidth() > 0 && ic.getIconHeight() > 0) {
+                    Image img = ic.getImage();
+                    int iw = ic.getIconWidth();
+                    int ih = ic.getIconHeight();
+                    
+                    // Calculate scaled size maintaining aspect ratio
                     double aspect = (double) iw / ih;
                     int w = targetW;
                     int h = (int) (w / aspect);
@@ -535,12 +593,17 @@ public class PokedexFrame extends JFrame {
                         h = targetH;
                         w = (int) (h * aspect);
                     }
-                    scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                    
+                    // Create scaled image
+                    Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                    
+                    // Create new ImageIcon from scaled image to ensure it's ready
+                    ImageIcon scaledIcon = new ImageIcon(scaled);
+                    return scaledIcon.getImage();
                 }
             }
-
-            imgCache.put(id, scaled);
-            return scaled;
+            
+            return null;
         }
     }
 

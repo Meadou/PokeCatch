@@ -15,6 +15,8 @@ public class Loading_Screen extends JPanel {
 
     private Timer timer;
     private int elapsedTicks = 0;
+    private int animationDuration; // Duration in milliseconds
+    private Color backgroundColor;
 
     private BufferedImage pokeballImage;
 
@@ -72,10 +74,17 @@ public class Loading_Screen extends JPanel {
 
     private Pokeball[] pokeballs;
 
-    // ================= CONSTRUCTOR =================
+    //Constructor with default values
     public Loading_Screen() {
+        this(1500, 0x000000); // Default: 1.5 seconds, black background
+    }
+    
+    //Constructor with custom duration and color
+    public Loading_Screen(int durationMs, int colorHex) {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(new Color(0x8BCFD9));
+        this.animationDuration = durationMs;
+        this.backgroundColor = new Color(colorHex);
+        setBackground(backgroundColor);
 
         try {
             pokeballImage = ImageIO.read(getClass().getResource("/pokeball.png"));
@@ -92,6 +101,9 @@ public class Loading_Screen extends JPanel {
                 new Pokeball(20, WIDTH / 2 + 60, centerY, size)
         };
 
+        // Calculate number of ticks based on duration (30ms per tick)
+        int totalTicks = animationDuration / 30;
+        
         timer = new Timer(30, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -101,8 +113,8 @@ public class Loading_Screen extends JPanel {
                     p.update();
                 }
 
-                // Stop after 1.5 seconds (50 ticks × 30ms)
-                if (elapsedTicks >= 50) {
+                // Stop after specified duration
+                if (elapsedTicks >= totalTicks) {
                     timer.stop();
 
                     Window window = SwingUtilities.getWindowAncestor(Loading_Screen.this);

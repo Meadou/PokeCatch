@@ -1,15 +1,8 @@
 import javax.swing.*;
-import Logic.GameState;
-import Logic.Util;
-import Logic.FileHandler;
-import Logic.PlayerDataManager;
-import pkmn.Pokemon;
-import Model.PlayerData;
-import View.Loading_Screen;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.Scanner;
-import java.util.List;
+
+
+
+
 public class Main {
     private static boolean isDialogShowing = false; // Prevent multiple dialogs
     private static Scanner scanner = new Scanner(System.in);

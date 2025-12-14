@@ -14,6 +14,7 @@ public class intro_GUI {
     public static class MainFrame extends JFrame {
         CardLayout cardLayout;
         JPanel mainPanel;
+        JPanel panel;
 
 
         public MainFrame() {

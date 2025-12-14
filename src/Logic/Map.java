@@ -1,5 +1,6 @@
 package Logic;
 import java.util.ArrayList;
+
 import pkmn.*;
 public class Map {
 

@@ -3,7 +3,7 @@ package Logic;
 import java.util.ArrayList;
 import java.util.List;
 
-import Model.Pokemon;
+import pkmn.Pokemon;
 
 public class PokemonBST {
     private PokeTreeNode root;

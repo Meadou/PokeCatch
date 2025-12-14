@@ -234,8 +234,8 @@ public class PokedexFrame extends JFrame {
         // Replace tree panel with loading screen
         treePanel = new TreePanel(currentBst);
         
-        // Show loading screen
-        Loading_Screen loadingScreen = new Loading_Screen();
+        // Show loading screen (1.5 seconds, blue color 0x8BCFD9)
+        Loading_Screen loadingScreen = new Loading_Screen(1500, 0x8BCFD9);
         treeScrollPane.setViewportView(loadingScreen);
         
         // Use SwingWorker to perform balance operation in background

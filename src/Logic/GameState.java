@@ -7,7 +7,7 @@ import pkmn.Pokemon;
 public class GameState {
 
     private static GameState instance;
-    private Stage currentStage;
+    private static Stage currentStage;
     private int globalScore;
     private ArrayList<Pokemon> caughtPokemonArray; // Temporary array for caught pokemon during stage
     private PokemonBST globalPokemonBST; // Global BST storing all caught pokemon
@@ -23,8 +23,8 @@ public class GameState {
         return currentStage;
     }
 
-    public void setCurrenStage(Stage stage) {
-        this.currentStage = stage;
+    public static void setCurrenStage(Stage stage) {
+        currentStage = stage;
     }
 
     public static GameState getInstance() {

@@ -2,8 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
-
-
+import Logic.Util;
+import pkmn.Pokemon;
+import View.Loading_Screen;
 
 public class Intro {
 
@@ -14,8 +15,8 @@ public class Intro {
     private JPanel captionPanel;
     private JFrame frame;
     private JLabel topLabel;
-    private final String[] labelTexts = {"POLIWAG", "VULPIX", "ODDISH"};
-    private final int[] chooseStarter = {60, 37, 43};
+    private String[] labelTexts;
+    private int[] chooseStarter;
     private int chosenStarterId = -1;
     private JPanel skipPanel;
     private Timer slideshowTimer;
@@ -38,7 +39,32 @@ public class Intro {
     }
 
     public void launchIntro() {
+        // Hardcode starter Pokemon IDs: 1 (Bulbasaur), 4 (Charmander), 7 (Squirtle)
+        setStarters();
         SwingUtilities.invokeLater(this::GUI);
+    }
+    
+    // Set hardcoded starter Pokemon IDs
+    private void setStarters() {
+        Util util = new Util();
+        
+        // Hardcode the three classic starters
+        int[] starterIds = {1, 4, 7}; // Bulbasaur, Charmander, Squirtle
+        
+        labelTexts = new String[3];
+        chooseStarter = new int[3];
+        
+        for (int i = 0; i < 3; i++) {
+            Pokemon p = util.getPokemonById(starterIds[i]);
+            if (p != null) {
+                labelTexts[i] = p.name.toUpperCase();
+                chooseStarter[i] = p.pokemonID;
+            } else {
+                // Fallback if Pokemon not found
+                labelTexts[i] = "POKEMON " + starterIds[i];
+                chooseStarter[i] = starterIds[i];
+            }
+        }
     }
 
     private void GUI() {
@@ -73,14 +99,10 @@ public class Intro {
             storyImages[i] = loadAndScale(Objects.requireNonNull(getClass().getResource(storyImagesArr[i])), 800, 500);
         }
 
-        String[] starterPokemonImageArr = {
-                "/introResources/starter1.png",
-                "/introResources/starter2.png",
-                "/introResources/starter3.png"
-        };
-        pokemonStarterImages = new BufferedImage[starterPokemonImageArr.length];
-        for (int i = 0; i < starterPokemonImageArr.length; i++) {
-            pokemonStarterImages[i] = loadAndScale(Objects.requireNonNull(getClass().getResource(starterPokemonImageArr[i])), 800, 500);
+        // Load Pokemon images based on selected starter IDs (smaller size to prevent blurring)
+        pokemonStarterImages = new BufferedImage[3];
+        for (int i = 0; i < 3 && i < chooseStarter.length; i++) {
+            pokemonStarterImages[i] = loadPokemonImage(chooseStarter[i], 300, 300);
         }
 
         frame.setVisible(true);
@@ -224,9 +246,8 @@ public class Intro {
                 if (selectionListener != null) {
                     selectionListener.onStarterChosen(chosenStarterId);
                 }
-                if (frame != null) {
-                    frame.dispose();
-                }
+                // Show loading screen on intro frame before disposing
+                showLoadingScreenOnFrame();
             }
         });
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -317,5 +338,73 @@ public class Intro {
         g.drawImage(img, 0, 0, width, height, null);
         g.dispose();
         return b;
+    }
+
+    // Show loading screen on the intro frame
+    public void showLoadingScreenOnFrame() {
+        if (frame == null) return;
+        
+        frame.getContentPane().removeAll();
+        
+        Loading_Screen loadingScreen = new Loading_Screen(2000, 0x000000);
+        frame.getContentPane().setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        frame.getContentPane().add(loadingScreen, gbc);
+        frame.getContentPane().setBackground(Color.BLACK);
+        
+        frame.revalidate();
+        frame.repaint();
+        
+        // Dispose frame after loading screen completes
+        Timer disposeTimer = new Timer(2500, e -> {
+            if (frame != null) {
+                frame.dispose();
+            }
+        });
+        disposeTimer.setRepeats(false);
+        disposeTimer.start();
+    }
+
+    private BufferedImage loadPokemonImage(int pokemonId, int width, int height) {
+        // Format Pokemon ID to 4 digits (e.g., 1 -> 0001.png)
+        String fileName = String.format("%04d.png", pokemonId);
+        String imagePath = "firered-leafgreen/" + fileName;
+        
+        // Try to load the image
+        java.io.File imageFile = new java.io.File(imagePath);
+        
+        if (imageFile.exists()) {
+            // Load image from file
+            ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
+            Image img = icon.getImage();
+            
+            // Create buffered image and scale it
+            BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = b.createGraphics();
+            
+            // Draw the image scaled to the target size
+            g.drawImage(img, 0, 0, width, height, null);
+            g.dispose();
+            
+            return b;
+        } else {
+            // If image not found, create a black image with error message
+            BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = b.createGraphics();
+            g.setColor(Color.BLACK);
+            g.fillRect(0, 0, width, height);
+            g.setColor(Color.WHITE);
+            g.setFont(new Font("Arial", Font.BOLD, 24));
+            String text = "Image not found: " + pokemonId;
+            FontMetrics fm = g.getFontMetrics();
+            int x = (width - fm.stringWidth(text)) / 2;
+            int y = (height + fm.getAscent()) / 2;
+            g.drawString(text, x, y);
+            g.dispose();
+            return b;
+        }
     }
 }

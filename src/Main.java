@@ -87,6 +87,7 @@ public class Main {
         
         GameState gameState = GameState.getInstance();
         // Start new game with placeholder starter ID (will be set when starter is selected in intro)
+        // ask player for name
         PlayerDataManager.startNewGame(gameState, playerName, -1);
         
         // Launch intro immediately - starter selection will happen in the intro GUI
@@ -115,6 +116,7 @@ public class Main {
     }
 
     private static void launchGame(int starterId, String playerName) {
+        // set skip intro to true to skip the intro
         launchGame(starterId, playerName, 1, false);
     }
 
@@ -157,8 +159,12 @@ public class Main {
                 
                 music.stop();
                 
-                // start stage sequence from saved stage or stage 1
-                SwingUtilities.invokeLater(() -> startStageSequence(startStage));
+                // Loading screen is shown on intro frame, then start stage after delay
+                Timer stageTimer = new Timer(2500, e -> {
+                    startStageSequence(startStage);
+                });
+                stageTimer.setRepeats(false);
+                stageTimer.start();
             });
 
             introScreen.launchIntro();
@@ -200,6 +206,44 @@ public class Main {
                 System.out.print("Invalid input. Please enter a number: ");
             }
         }
+    }
+
+    // Show loading screen before starting stage
+    private static void showLoadingScreen(Runnable onComplete) {
+        JFrame loadingFrame = new JFrame("Loading...");
+        loadingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        loadingFrame.setUndecorated(true);
+        loadingFrame.setResizable(false);
+        
+        Loading_Screen loadingScreen = new Loading_Screen(2000, 0x000000); // 2 seconds, black
+        loadingFrame.add(loadingScreen);
+        loadingFrame.pack();
+        loadingFrame.setLocationRelativeTo(null);
+        loadingFrame.setVisible(true);
+        
+        // Add window listener to detect when loading screen closes
+        loadingFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                // When loading screen closes, start the stage
+                if (onComplete != null) {
+                    onComplete.run();
+                }
+            }
+        });
+        
+        // Also add a timer as backup in case window doesn't close properly
+        // Loading_Screen auto-closes after 2 seconds
+        Timer backupTimer = new Timer(2500, e -> {
+            if (loadingFrame.isVisible()) {
+                loadingFrame.dispose();
+            }
+            if (onComplete != null) {
+                onComplete.run();
+            }
+        });
+        backupTimer.setRepeats(false);
+        backupTimer.start();
     }
 
     // Orchestrates stages and pokedex viewing

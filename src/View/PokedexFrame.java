@@ -197,13 +197,64 @@ public class PokedexFrame extends JFrame {
             statusLabel.setText("Tree is empty");
             return;
         }
-        int oldDepth = getDepth(currentBst.getRoot());
-        currentBst.balance();
-        int newDepth = getDepth(currentBst.getRoot());
-        traversalList.clear();
-        traversalIndex = 0;
-        statusLabel.setText("Balanced! Depth: " + oldDepth + " -> " + newDepth);
-        treePanel.repaint();
+        
+        // Get old depth before balancing
+        final int oldDepth = getDepth(currentBst.getRoot());
+        
+        // Replace tree panel with loading screen
+        final TreePanel oldTreePanel = treePanel;
+        treePanel = new TreePanel(currentBst);
+        
+        // Show loading screen
+        Loading_Screen loadingScreen = new Loading_Screen();
+        treeScrollPane.setViewportView(loadingScreen);
+        
+        // Use SwingWorker to perform balance operation in background
+        SwingWorker<Integer, Void> worker = new SwingWorker<Integer, Void>() {
+            @Override
+            protected Integer doInBackground() throws Exception {
+                // Perform the balance operation
+                currentBst.balance();
+                
+                // Calculate new depth
+                int newDepth = getDepth(currentBst.getRoot());
+                
+                // Ensure minimum display time (1.5 seconds to match Loading_Screen animation)
+                Thread.sleep(1500);
+                
+                return newDepth;
+            }
+            
+            @Override
+            protected void done() {
+                try {
+                    // Get the new depth
+                    int newDepth = get();
+                    
+                    // Restore tree panel with new balanced tree
+                    treePanel = new TreePanel(currentBst);
+                    treeScrollPane.setViewportView(treePanel);
+                    
+                    // Update UI
+                    traversalList.clear();
+                    traversalIndex = 0;
+                    statusLabel.setText("Balanced! Depth: " + oldDepth + " -> " + newDepth);
+                    treePanel.repaint();
+                    
+                } catch (Exception ex) {
+                    // Restore tree panel on error
+                    treePanel = new TreePanel(currentBst);
+                    treeScrollPane.setViewportView(treePanel);
+                    treePanel.repaint();
+                    
+                    statusLabel.setText("Error balancing tree");
+                    ex.printStackTrace();
+                }
+            }
+        };
+        
+        // Start the worker
+        worker.execute();
     }
 
     private void traverseNext() {

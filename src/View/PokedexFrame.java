@@ -5,8 +5,8 @@ import javax.swing.*;
 
 import Logic.PokeTreeNode;
 import Logic.PokemonBST;
+import pkmn.Pokemon;
 import Logic.GameState;
-import Model.Pokemon;
 
 public class PokedexFrame extends JFrame {
     private PokemonBST originalBst;

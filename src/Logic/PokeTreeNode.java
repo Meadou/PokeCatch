@@ -1,6 +1,6 @@
 package Logic;
 
-import Model.Pokemon;
+import pkmn.Pokemon;
 
 public class PokeTreeNode {
     public Pokemon pokemon;

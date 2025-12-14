@@ -2,7 +2,7 @@ package Logic;
 
 import java.util.ArrayList;
 
-import Model.Pokemon;
+import pkmn.Pokemon;
 
 public class Stage {
     public int score;

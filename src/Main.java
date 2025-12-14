@@ -3,13 +3,12 @@ import Logic.GameState;
 import Logic.Util;
 import Logic.FileHandler;
 import Logic.PlayerDataManager;
-import Model.Pokemon;
+import pkmn.Pokemon;
 import Model.PlayerData;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Scanner;
 import java.util.List;
-
 public class Main {
     private static boolean isDialogShowing = false; // Prevent multiple dialogs
     private static Scanner scanner = new Scanner(System.in);
@@ -203,10 +202,37 @@ public class Main {
 
     // Orchestrates stages and pokedex viewing
     private static void startStageSequence(int startStage) {
-        // Create and show stage, passing callback for when stage ends
-        new View.StageWindow(startStage, clearedStage -> {
-            // Show options dialog on EDT after stage clears
-            SwingUtilities.invokeLater(() -> showPostStageOptions(clearedStage));
+        // Create stage based on stage number
+        Util util = new Util();
+        Logic.Stage stage = null;
+        
+        switch (startStage) {
+            case 1:
+                stage = new Logic.Stage("Grass", util.initializeStage1Pokemon(), true);
+                break;
+            case 2:
+                stage = new Logic.Stage("Rock", util.initializeStage2Pokemon(), false);
+                break;
+            case 3:
+                stage = new Logic.Stage("Ocean", util.initializeStage3Pokemon(), false);
+                break;
+            case 4:
+                stage = new Logic.Stage("Snow", util.initializeStage4Pokemon(), false);
+                break;
+            case 5:
+                stage = new Logic.Stage("Swamp", util.initializeStage4Pokemon(), false);
+                break;
+            case 6:
+                stage = new Logic.Stage("Lava", util.initializeStage4Pokemon(), false);
+                break;
+            default:
+                stage = new Logic.Stage("Grass", util.initializeStage1Pokemon(), true);
+        }
+        
+        // Create and show game panel with callback
+        new ui.PokeGamePanel(stage, () -> {
+            // Callback when game ends - show post-stage options
+            SwingUtilities.invokeLater(() -> showPostStageOptions(startStage));
         });
     }
 

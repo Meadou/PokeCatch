@@ -1,11 +1,11 @@
 package View;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class Loading_Screen extends JPanel {
 
@@ -75,7 +75,7 @@ public class Loading_Screen extends JPanel {
     // ================= CONSTRUCTOR =================
     public Loading_Screen() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setBackground(Color.WHITE);
+        setBackground(new Color(0x8BCFD9));
 
         try {
             pokeballImage = ImageIO.read(getClass().getResource("/pokeball.png"));
@@ -138,7 +138,8 @@ public class Loading_Screen extends JPanel {
         Font font = new Font("Press Start 2P", Font.PLAIN, 12);
 
         g2d.setFont(font);
-        g2d.setColor(Color.BLACK);
+        // Use white text for good contrast against the Pokedex blue
+        g2d.setColor(Color.WHITE);
 
         FontMetrics fm = g2d.getFontMetrics(font);
         int textWidth = fm.stringWidth(loadingText);

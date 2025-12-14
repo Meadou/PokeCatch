@@ -12,10 +12,10 @@ public class StageWindow {
     public static Scanner sc = new Scanner(System.in);
     public PokeGamePanel game;
     public static Util u = new Util();
-    public static Stage stage1 = new Stage("Grass", u.initializeStage1Pokemon(), true);
-    public static Stage stage2 = new Stage("Cave", u.initializeStage2Pokemon(), false);
-    public static Stage stage3 = new Stage("Ocean", u.initializeStage3Pokemon(), false);
-    public static Stage stage4 = new Stage("Lava", u.initializeStage4Pokemon(), false);
+    public static Stage stage1 = new Stage("grass", u.initializeStage1Pokemon(), true);
+    public static Stage stage2 = new Stage("cave", u.initializeStage2Pokemon(), false);
+    public static Stage stage3 = new Stage("ocean", u.initializeStage3Pokemon(), false);
+    public static Stage stage4 = new Stage("lava", u.initializeStage4Pokemon(), false);
      public static void main(String[] args) {
         
 
@@ -43,6 +43,24 @@ public class StageWindow {
 
     public static void exit() {
         System.exit(0);
+    }
+
+    public static void nextStage(Stage currStage) {
+        switch (currStage.stageName) {
+            case "grass" -> {
+                stage2.isUnlocked = true;
+                new PokeGamePanel(stage2);
+            }
+            case "cave" -> {
+                stage3.isUnlocked = true;
+                new PokeGamePanel(stage3);
+            }
+            case "ocean" -> {
+                stage4.isUnlocked = true;
+                new PokeGamePanel(stage4);
+            }
+            default -> new PokeGamePanel(stage1);
+        }
     }
 }
 

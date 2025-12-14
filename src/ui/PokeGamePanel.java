@@ -5,8 +5,9 @@ import Logic.Logic;
 import Logic.Stage;
 import Logic.Util;
 import View.PokedexFrame;
+import View.StageWindow;
 import pkmn.Pokemon;
-
+import View.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -25,26 +26,33 @@ public class PokeGamePanel extends JFrame {
     int gameTime = 15; 
     JLabel timerLabel;
     Timer gameTimer;
-    private Runnable onGameEndCallback;
 
     private JButton pauseButton;
     private JButton resumeButton;
     private boolean isPaused = false;
     private Timer spawnTimer; 
 
-    
+    private final ArrayList<JButton> activeButtons = new ArrayList<>();
+    private final ArrayList<Timer> despawnTimers = new ArrayList<>();
+
+    private double bombChance;
+
     public PokeGamePanel(Stage stage) {
-        this(stage, null);
-    }
-    
-    public PokeGamePanel(Stage stage, Runnable onGameEndCallback) {
         
-        this.onGameEndCallback = onGameEndCallback;
         this.setTitle("Pokemon Clicker Game - Stage: " + stage.stageName);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setResizable(false);
         this.setSize(1280, 720);
         this.setLocationRelativeTo(null);
+
+        bombChance = switch (stage.stageName) {
+            case "grass" -> 0.15;
+            case "cave" -> 0.25;
+            case "ocean" -> 0.35;
+            case "lava" -> 0.45;
+            default -> 0.2;
+        };
+
 
         String bgPath = getBackgroundPath(stage.stageName);
         BackgroundPanel bgPanel = new BackgroundPanel(bgPath);
@@ -73,7 +81,7 @@ public class PokeGamePanel extends JFrame {
 
             if (gameTime <= 0) {
                 gameTimer.stop();
-                endStage(); 
+                endStage(stage); 
             }
         });
         gameTimer.start();
@@ -107,22 +115,48 @@ public class PokeGamePanel extends JFrame {
     private void pauseGame() {
         if (!isPaused) {
             isPaused = true;
+
             gameTimer.stop();
             if (spawnTimer != null) spawnTimer.stop();
+
+            // Freeze all despawn timers
+            for (Timer t : despawnTimers) {
+                t.stop();
+            }
+
+            // Disable all active buttons
+            for (JButton btn : activeButtons) {
+                btn.setEnabled(false);
+            }
+
             pauseButton.setVisible(false);
             resumeButton.setVisible(true);
         }
     }
 
+
     private void resumeGame() {
         if (isPaused) {
             isPaused = false;
+
             gameTimer.start();
             if (spawnTimer != null) spawnTimer.start();
+
+            // Resume despawn timers
+            for (Timer t : despawnTimers) {
+                t.start();
+            }
+
+            // Enable buttons again
+            for (JButton btn : activeButtons) {
+                btn.setEnabled(true);
+            }
+
             pauseButton.setVisible(true);
             resumeButton.setVisible(false);
         }
     }
+
 
 
     public void spawnPokemonButton(ArrayList<Pokemon> pokemonList) {
@@ -140,7 +174,7 @@ public class PokeGamePanel extends JFrame {
         button.setBorder(null);
         button.setContentAreaFilled(false);
 
-        boolean isBomb = Math.random() < 0.2; 
+        boolean isBomb = Math.random() < bombChance;
 
         if (isBomb) {
             ImageIcon bombIcon = new ImageIcon(
@@ -181,24 +215,43 @@ public class PokeGamePanel extends JFrame {
                     Image img = icon.getImage();
                     Image whiteImg = createWhiteSilhouette(img, button.getWidth(), button.getHeight());
                     button.setIcon(new ImageIcon(whiteImg));
+                    
                 }
 
                 // Disable the button so it can't be clicked again
                 button.setEnabled(false);
 
-                // Remove after short delay
                 Timer effectTimer = new Timer(300, ev -> {
                     this.remove(button);
+                    activeButtons.remove(button);
                     this.repaint();
                 });
                 effectTimer.setRepeats(false);
                 effectTimer.start();
+
 
                 // Add caught Pokémon & update score
                 gameState.addCaughtPokemon(pokemon);
                 gameState.addScore(100);
                 scoreLabel.setText("Score: " + gameState.getGlobalScore());
             });
+            
+        this.add(button);
+        this.repaint();
+
+        Timer despawnTimer = new Timer(1000, e -> {
+            Timer t = (Timer) e.getSource();
+
+            t.stop();
+            this.remove(button);
+            activeButtons.remove(button);
+            despawnTimers.remove(t);
+            this.repaint();
+        });
+
+        despawnTimer.setRepeats(false);
+        despawnTimers.add(despawnTimer);
+        despawnTimer.start();
 
         }
 
@@ -221,9 +274,10 @@ public class PokeGamePanel extends JFrame {
         }
 
         JOptionPane.showMessageDialog(this, "Game Over!");
+        this.dispose();
     }
 
-    private void endStage() {
+   private void endStage(Stage currStage) {
         if (gameTimer != null) {
             gameTimer.stop();
         }
@@ -240,7 +294,14 @@ public class PokeGamePanel extends JFrame {
         String message = "Stage Completed!\nScore: " + gameState.getGlobalScore() +
                         "\nCaught Pokémon this stage: " + caughtCount;
 
-        Object[] options = {"Next Stage", "Open Pokédex", "Exit"};
+        boolean isFinalStage = currStage.stageName.equalsIgnoreCase("lava");
+
+        Object[] options;
+        if (isFinalStage) {
+            options = new Object[]{"Back", "Open Pokédex", "Exit"};
+        } else {
+            options = new Object[]{"Next Stage", "Open Pokédex", "Exit"};
+        }
 
         int choice = JOptionPane.showOptionDialog(
             this,
@@ -254,7 +315,12 @@ public class PokeGamePanel extends JFrame {
         );
 
         switch (choice) {
-            case 0 -> { /* Next Stage: empty */ }
+            case 0 -> {
+                this.dispose();
+                if (!isFinalStage) {
+                    StageWindow.nextStage(currStage);
+                }
+            }
             case 1 -> {
                 this.dispose();
                 new PokedexFrame();
@@ -316,7 +382,6 @@ public class PokeGamePanel extends JFrame {
         Graphics2D g2d = img.createGraphics();
         g2d.drawImage(original, 0, 0, width, height, null);
 
-        // Set all non-transparent pixels to white
         for (int x = 0; x < img.getWidth(); x++) {
             for (int y = 0; y < img.getHeight(); y++) {
                 int alpha = (img.getRGB(x, y) >> 24) & 0xff;

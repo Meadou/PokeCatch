@@ -7,12 +7,12 @@ import pkmn.Pokemon;
 public class GameState {
 
     private static GameState instance;
-    private Stage currentStage;
+    private static Stage currentStage;
     private int globalScore;
     private ArrayList<Pokemon> caughtPokemonArray; // Temporary array for caught pokemon during stage
     private PokemonBST globalPokemonBST; // Global BST storing all caught pokemon
 
-    private GameState() {
+    public GameState() {
         globalScore = 0;
         caughtPokemonArray = new ArrayList<>();
         globalPokemonBST = new PokemonBST();
@@ -23,8 +23,8 @@ public class GameState {
         return currentStage;
     }
 
-    public void setCurrenStage(Stage stage) {
-        this.currentStage = stage;
+    public static void setCurrenStage(Stage stage) {
+        currentStage = stage;
     }
 
     public static GameState getInstance() {
@@ -74,6 +74,10 @@ public class GameState {
     // Get current caught pokemon array (for debugging/testing)
     public ArrayList<Pokemon> getCaughtPokemonArray() {
         return caughtPokemonArray;
+    }
+    // example condition for unlocking ending
+    public boolean isUnlocked() {
+        return globalScore >= 5000; // Example threshold for unlocking ending
     }
 }
 

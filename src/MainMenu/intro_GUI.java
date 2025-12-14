@@ -14,6 +14,7 @@ public class intro_GUI {
         JPanel mainPanel;
 
 
+
         public MainFrame() {
             cardLayout = new CardLayout();
             mainPanel = new JPanel(cardLayout);

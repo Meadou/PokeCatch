@@ -3,13 +3,14 @@ import Logic.GameState;
 import Logic.Util;
 import Logic.FileHandler;
 import Logic.PlayerDataManager;
+import View.EndingFrame;
 import pkmn.Pokemon;
 import Model.PlayerData;
-import View.Loading_Screen;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Scanner;
 import java.util.List;
+import Music.MusicPlayer;
 public class Main {
     private static boolean isDialogShowing = false; // Prevent multiple dialogs
     private static Scanner scanner = new Scanner(System.in);
@@ -344,6 +345,17 @@ public class Main {
             PlayerDataManager.saveProgress(gameState, lastStage);
             System.out.println("Progress saved. Goodbye!");
             System.exit(0);
+        }
+    }
+    // not final just example
+    private static void showEnding() {
+        GameState gameState = GameState.getInstance();
+        MusicPlayer musicPlayer = new MusicPlayer();
+
+        EndingFrame endingFrame = new EndingFrame(gameState, musicPlayer);
+
+        if (gameState.isUnlocked()) {
+            endingFrame.showEnding();
         }
     }
 }

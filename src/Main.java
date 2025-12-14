@@ -3,8 +3,8 @@ public class Main {
         System.out.println("Welcome to PokeCatch!");
         System.out.println("marjhun gaming");
 
-        Intro introScreen = new Intro();
-        MusicPlayer music = new MusicPlayer();
+        var introScreen = new Intro();
+        var music = new MusicPlayer();
 
         music.playLoop("/Music/pallet_town_theme.wav");
 

@@ -43,18 +43,18 @@ public class PokedexFrame extends JFrame {
         JPanel leftPanel = createLeftPanel();
         JPanel rightPanel = createRightPanel();
 
-        // Center container: left side gets 35% (30% smaller than 50%), right side gets 65%
+        // Center container: left side gets 65%, right side gets 35% (30% smaller than 50%)
         JPanel centerContainer = new JPanel(new BorderLayout(20, 0));
         centerContainer.setOpaque(false);
         centerContainer.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Left panel with preferred width (approximately 35% of frame width)
-        // Frame width is 1100, so left gets ~385px
-        leftPanel.setPreferredSize(new Dimension(385, 0));
-        centerContainer.add(leftPanel, BorderLayout.WEST);
+        // Right panel with preferred width (approximately 35% of frame width)
+        // Frame width is 1100, so right gets ~385px
+        rightPanel.setPreferredSize(new Dimension(385, 0));
+        centerContainer.add(rightPanel, BorderLayout.EAST);
         
-        // Right panel gets remaining space (CENTER in BorderLayout)
-        centerContainer.add(rightPanel, BorderLayout.CENTER);
+        // Left panel gets remaining space (CENTER in BorderLayout)
+        centerContainer.add(leftPanel, BorderLayout.CENTER);
 
         // Place the center container in the center of the frame so it's balanced and centered
         add(centerContainer, BorderLayout.CENTER);
@@ -126,7 +126,6 @@ public class PokedexFrame extends JFrame {
         JPanel right = new JPanel(new BorderLayout(5, 5));
         right.setBackground(new Color(0xFF4646));
         right.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        right.setPreferredSize(new Dimension(300, 0));
 
         // Image placeholder (use a JLabel so we can set an icon)
         rightImageLabel = new JLabel("(no image)", SwingConstants.CENTER);
@@ -304,10 +303,11 @@ public class PokedexFrame extends JFrame {
         });
     }
 
-    // Inner class: TreePanel for visualization
+    // Inner class: TreePanel for visualization (draws images inside nodes)
     static class TreePanel extends JPanel {
         private PokemonBST bst;
         public PokeTreeNode highlightNode = null;
+        private java.util.Map<Integer, Image> imgCache = new java.util.HashMap<>();
 
         private int minX = Integer.MAX_VALUE;
         private int maxX = Integer.MIN_VALUE;
@@ -333,17 +333,55 @@ public class PokedexFrame extends JFrame {
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            if (bst.getRoot() != null) {
-                calculatePositions(getWidth(), getHeight());
-                drawLines(g2, bst.getRoot());
-                drawNodes(g2, bst.getRoot());
+            if (bst != null && bst.getRoot() != null) {
+                // Calculate positions using a base width to determine layout
+                int baseWidth = Math.max(600, getWidth());
+                int baseHeight = calculateTreeHeight();
+                calculatePositions(baseWidth, baseHeight);
+                
+                // Calculate actual bounds after positioning
+                calculateTreeBounds(bst.getRoot());
+                
+                // Set preferred size based on actual bounds with padding
+                int padding = 100;
+                int prefWidth = Math.max(getWidth(), maxX - minX + padding);
+                int prefHeight = Math.max(getHeight(), maxY - minY + padding);
+                setPreferredSize(new Dimension(prefWidth, prefHeight));
+                
+                drawLines(g2, bst.getRoot());    // first pass: lines
+                drawNodes(g2, bst.getRoot());    // second pass: nodes (images on top)
             }
+        }
+
+        private int calculateTreeHeight() {
+            return getDepth(bst.getRoot()) * 80 + 100;
+        }
+        
+        private int getDepth(PokeTreeNode node) {
+            if (node == null) return 0;
+            return 1 + Math.max(getDepth(node.left), getDepth(node.right));
+        }
+        
+        private void calculateTreeBounds(PokeTreeNode node) {
+            if (node == null) return;
+            int radius = 30;
+            minX = Math.min(minX, node.x - radius);
+            maxX = Math.max(maxX, node.x + radius);
+            minY = Math.min(minY, node.y - radius);
+            maxY = Math.max(maxY, node.y + radius);
+            calculateTreeBounds(node.left);
+            calculateTreeBounds(node.right);
         }
 
         private void calculatePositions(int width, int height) {
             PokeTreeNode root = bst.getRoot();
             if (root == null) return;
-            calculatePos(root, width / 2, 30, width / 4, 0);
+            // Reset bounds
+            minX = Integer.MAX_VALUE;
+            maxX = Integer.MIN_VALUE;
+            minY = Integer.MAX_VALUE;
+            maxY = Integer.MIN_VALUE;
+            calculatePos(root, width / 2, 30, Math.max(40, width / 4), 0);
         }
 
         private void calculatePos(PokeTreeNode node, int x, int y, int xOffset, int depth) {
@@ -362,7 +400,7 @@ public class PokedexFrame extends JFrame {
 
         private void drawLines(Graphics2D g, PokeTreeNode node) {
             if (node == null) return;
-            g.setColor(new Color(80, 120, 180));
+            g.setColor(new Color(0x5078B4));
             g.setStroke(new BasicStroke(3));
             if (node.left != null) {
                 g.drawLine(node.x, node.y, node.left.x, node.left.y);
@@ -376,23 +414,82 @@ public class PokedexFrame extends JFrame {
 
         private void drawNodes(Graphics2D g, PokeTreeNode node) {
             if (node == null) return;
+
             int radius = 25;
+            int diameter = radius * 2;
             Color nodeColor = (node == highlightNode) ? new Color(0xFF6464) : new Color(0x96B4DC);
+
+            // background circle
             g.setColor(nodeColor);
-            g.fillOval(node.x - radius, node.y - radius, radius * 2, radius * 2);
+            g.fillOval(node.x - radius, node.y - radius, diameter, diameter);
+
+            // image inside node (if available)
+            Image img = loadImageForId(node.pokemon.pokemonID, diameter - 6, diameter - 6);
+            if (img != null) {
+                int iw = img.getWidth(null);
+                int ih = img.getHeight(null);
+                int ix = node.x - iw / 2;
+                int iy = node.y - ih / 2;
+                g.drawImage(img, ix, iy, null);
+            }
+
+            // border on top
             g.setColor(new Color(0x325078));
             g.setStroke(new BasicStroke(2));
-            g.drawOval(node.x - radius, node.y - radius, radius * 2, radius * 2);
+            g.drawOval(node.x - radius, node.y - radius, diameter, diameter);
 
+            // small ID text
             g.setColor(Color.WHITE);
             g.setFont(new Font("Arial", Font.BOLD, 9));
             String idText = String.valueOf(node.pokemon.pokemonID);
             FontMetrics fm = g.getFontMetrics();
             int textWidth = fm.stringWidth(idText);
-            g.drawString(idText, node.x - textWidth / 2, node.y + 3);
+            g.drawString(idText, node.x - textWidth / 2, node.y + radius - 4);
 
             drawNodes(g, node.left);
             drawNodes(g, node.right);
+        }
+
+        private Image loadImageForId(int id, int targetW, int targetH) {
+            if (imgCache.containsKey(id)) return imgCache.get(id);
+
+            String fileName = String.format("%04d.png", id);
+            String userDir = System.getProperty("user.dir");
+            String[] candidates = new String[] {
+                "firered-leafgreen/" + fileName,
+                "../firered-leafgreen/" + fileName,
+                userDir + "/firered-leafgreen/" + fileName,
+                userDir + "/../firered-leafgreen/" + fileName
+            };
+
+            java.io.File found = null;
+            for (String path : candidates) {
+                java.io.File f = new java.io.File(path);
+                if (f.exists()) { found = f; break; }
+            }
+
+            Image scaled = null;
+            if (found != null) {
+                ImageIcon ic = new ImageIcon(found.getAbsolutePath());
+                Image img = ic.getImage();
+                int iw = img.getWidth(null);
+                int ih = img.getHeight(null);
+                if (iw <= 0 || ih <= 0) {
+                    scaled = img.getScaledInstance(targetW, targetH, Image.SCALE_SMOOTH);
+                } else {
+                    double aspect = (double) iw / ih;
+                    int w = targetW;
+                    int h = (int) (w / aspect);
+                    if (h > targetH) {
+                        h = targetH;
+                        w = (int) (h * aspect);
+                    }
+                    scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                }
+            }
+
+            imgCache.put(id, scaled);
+            return scaled;
         }
     }
 

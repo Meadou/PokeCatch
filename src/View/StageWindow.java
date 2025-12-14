@@ -1,62 +1,63 @@
 package View;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import Logic.Stage;
+import Logic.Util;
+import ui.PokeGamePanel;
 
-// placeholder for stage window
-public class StageWindow extends JFrame {
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+public class StageWindow {
 
     public interface StageCompleteListener {
         void onStageCleared(int stageNumber);
     }
 
-    private int stageNumber;
-    private StageCompleteListener listener;
+    private final int stageNumber;
+    private final StageCompleteListener listener;
 
     public StageWindow(int stageNumber, StageCompleteListener listener) {
-        super("Stage " + stageNumber);
         this.stageNumber = stageNumber;
         this.listener = listener;
-        initUI();
+        
+        // Create stage based on stage number
+        Stage stage = createStageForNumber(stageNumber);
+        
+        // Create and configure the game panel
+        PokeGamePanel gamePanel = new PokeGamePanel(stage, () -> {
+            // Callback when game ends (time up or bomb clicked)
+            if (this.listener != null) this.listener.onStageCleared(this.stageNumber);
+        });
+        
+        // Handle window close
+        gamePanel.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (StageWindow.this.listener != null) {
+                    StageWindow.this.listener.onStageCleared(StageWindow.this.stageNumber);
+                }
+            }
+        });
     }
 
-    private void initUI() {
-        setSize(600, 400);
-        setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
-
-        JLabel lbl = new JLabel("Stage " + stageNumber + " - Catch the Pokemon!", SwingConstants.CENTER);
-        lbl.setFont(new Font("Arial", Font.BOLD, 20));
-        add(lbl, BorderLayout.CENTER);
-
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JButton clearBtn = new JButton("Clear Stage");
-        JButton giveUpBtn = new JButton("Give Up");
-        bottom.add(clearBtn);
-        bottom.add(giveUpBtn);
-        add(bottom, BorderLayout.SOUTH);
-
-        clearBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // simulate clearing the stage
-                dispose();
-                if (listener != null) listener.onStageCleared(stageNumber);
-            }
-        });
-
-        giveUpBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // close without calling listener (treated as cleared)
-                dispose();
-                if (listener != null) listener.onStageCleared(stageNumber);
-            }
-        });
-
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setVisible(true);
+    private Stage createStageForNumber(int stageNum) {
+        Util util = new Util();
+        
+        switch (stageNum) {
+            case 1:
+                return new Stage("Grass", util.initializeStage1Pokemon(), true);
+            case 2:
+                return new Stage("Rock", util.initializeStage2Pokemon(), false);
+            case 3:
+                return new Stage("Ocean", util.initializeStage3Pokemon(), false);
+            case 4:
+                return new Stage("Snow", util.initializeStage4Pokemon(), false);
+            case 5:
+                return new Stage("Swamp", util.initializeStage5Pokemon(), false);
+            case 6:
+                return new Stage("Lava", util.initializeStage6Pokemon(), false);
+            default:
+                return new Stage("Grass", util.initializeStage1Pokemon(), true);
+        }
     }
 }

@@ -1,13 +1,20 @@
 package Logic;
 
+import java.util.ArrayList;
+import Model.Pokemon;
+
 public class GameState {
 
     private static GameState instance;
 
     private int globalScore;
+    private ArrayList<Pokemon> caughtPokemonArray; // Temporary array for caught pokemon during stage
+    private PokemonBST globalPokemonBST; // Global BST storing all caught pokemon
 
     private GameState() {
         globalScore = 0;
+        caughtPokemonArray = new ArrayList<>();
+        globalPokemonBST = new PokemonBST();
     }
 
     public static GameState getInstance() {
@@ -27,6 +34,36 @@ public class GameState {
 
     public void reset() {
         globalScore = 0;
+        caughtPokemonArray.clear();
+        globalPokemonBST = new PokemonBST();
+    }
+
+    // Add pokemon to the temporary caught array (during stage play)
+    public void addCaughtPokemon(Pokemon pokemon) {
+        if (pokemon != null) {
+            caughtPokemonArray.add(pokemon);
+        }
+    }
+
+    // Transfer all pokemon from array to BST, then clear array
+    // This is called after stage ends (game over or time up)
+    public void transferCaughtPokemonToBST() {
+        for (Pokemon pokemon : caughtPokemonArray) {
+            // BST insert handles duplicates by incrementing counter
+            globalPokemonBST.insert(pokemon);
+        }
+        // Clear the array after transferring
+        caughtPokemonArray.clear();
+    }
+
+    // Get the global BST (for Pokedex)
+    public PokemonBST getGlobalPokemonBST() {
+        return globalPokemonBST;
+    }
+
+    // Get current caught pokemon array (for debugging/testing)
+    public ArrayList<Pokemon> getCaughtPokemonArray() {
+        return caughtPokemonArray;
     }
 }
 

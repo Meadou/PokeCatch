@@ -2,6 +2,7 @@ package Logic;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import Model.Pokemon;
 
 public class PokemonBST {
@@ -103,7 +104,7 @@ public class PokemonBST {
         return list;
     }
 
-    private void inOrderRecursive(PokeTreeNode node, List<Model.Pokemon> out) {
+    private void inOrderRecursive(PokeTreeNode node, List<Pokemon> out) {
         if (node == null) return;
         inOrderRecursive(node.left, out);
         out.add(node.pokemon);
@@ -112,7 +113,7 @@ public class PokemonBST {
 
     // helper to print tree contents
     public void printInOrder() {
-        for (Model.Pokemon p : inOrder()) {
+        for (Pokemon p : inOrder()) {
             System.out.println(p.pokemonID + ": " + p.getName() + " (dup=" + p.getDuplicates() + ")");
         }
     }

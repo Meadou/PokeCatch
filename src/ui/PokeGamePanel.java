@@ -4,7 +4,7 @@ import javax.swing.*;
 import Logic.Logic;
 import Logic.Stage;
 import Logic.Util;
-import pkmn.Pokemon;
+import Model.Pokemon;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -23,10 +23,16 @@ public class PokeGamePanel extends JFrame {
     int gameTime = 30; 
     JLabel timerLabel;
     Timer gameTimer;
+    private Runnable onGameEndCallback;
     
     public PokeGamePanel(Stage stage) {
-        this.setTitle("Pokemon Clicker Game");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this(stage, null);
+    }
+    
+    public PokeGamePanel(Stage stage, Runnable onGameEndCallback) {
+        this.onGameEndCallback = onGameEndCallback;
+        this.setTitle("Pokemon Clicker Game - Stage: " + stage.stageName);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setResizable(false);
         this.setSize(1280, 720);
         this.setLocationRelativeTo(null);
@@ -112,18 +118,21 @@ public class PokeGamePanel extends JFrame {
         } else {
             Pokemon pokemon = logic.randomizer(pokemonList);
             String formattedID = String.format("%04d", pokemon.pokemonID);
-            String imagePath = "firered-leafgreen/" + formattedID + ".png";
-
-            ImageIcon icon = new ImageIcon(imagePath);
-            Image img = icon.getImage().getScaledInstance(buttonSize, buttonSize, Image.SCALE_SMOOTH);
-            button.setIcon(new ImageIcon(img));
+            String fileName = formattedID + ".png";
+            java.io.File file = new java.io.File("firered-leafgreen/" + fileName);
+            
+            if (file.exists()) {
+                ImageIcon icon = new ImageIcon(file.getAbsolutePath());
+                Image img = icon.getImage().getScaledInstance(buttonSize, buttonSize, Image.SCALE_SMOOTH);
+                button.setIcon(new ImageIcon(img));
+            }
 
             button.addActionListener(e -> {
             this.remove(button);
             this.repaint();
 
-            logic.ListPokemon(pokemon);
-            logic.displayList();
+            // Add caught pokemon to GameState array
+            gameState.addCaughtPokemon(pokemon);
 
             gameState.addScore(100);
             scoreLabel.setText("Score: " + gameState.getGlobalScore());
@@ -143,33 +152,49 @@ public class PokeGamePanel extends JFrame {
     }
 
     private void endGame() {
+        if (gameTimer != null) {
+            gameTimer.stop();
+        }
+        
         for (Component comp : this.getContentPane().getComponents()) {
             if (comp instanceof JButton) {
                 comp.setEnabled(false);
             }
         }
 
-        JOptionPane.showMessageDialog(this, "Game Over!");
-        System.exit(0);
+        // Transfer all caught pokemon from array to BST
+        int caughtCount = gameState.getCaughtPokemonArray().size();
+        gameState.transferCaughtPokemonToBST();
+        
+        String message = "Game Over! Final Score: " + gameState.getGlobalScore();
+        if (caughtCount > 0) {
+            message += "\nCaught " + caughtCount + " pokemon this stage!";
+        }
+        JOptionPane.showMessageDialog(this, message);
+        
+        if (onGameEndCallback != null) {
+            onGameEndCallback.run();
+        }
+        dispose();
     }
 
     
     private String getBackgroundPath(String stageName) {
         switch (stageName.toLowerCase()) {
             case "grass":
-                return "backgrounds/grass.png";
+                return "Backgrounds/grass.png";
             case "rock":
-                return "backgrounds/rock.png";
+                return "Backgrounds/rock.png";
             case "ocean":
-                return "backgrounds/ocean.png";
+                return "Backgrounds/ocean.png";
             case "snow":
-                return "backgrounds/snow.png";
+                return "Backgrounds/snow.png";
             case "swamp":
-                return "backgrounds/swamp.png";
+                return "Backgrounds/swamp.png";
             case "lava":
-                return "backgrounds/lava.png";
+                return "Backgrounds/lava.png";
             default:
-                return "backgrounds/default.png";
+                return "Backgrounds/grass.png";
         }
     }
 
@@ -178,14 +203,27 @@ public class PokeGamePanel extends JFrame {
     private Image backgroundImage;
 
         public BackgroundPanel(String imagePath) {
-            this.backgroundImage = new ImageIcon(imagePath).getImage();
+            java.io.File file = new java.io.File(imagePath);
+            if (file.exists()) {
+                this.backgroundImage = new ImageIcon(file.getAbsolutePath()).getImage();
+            } else {
+                // Fallback to a solid color if image not found
+                this.backgroundImage = null;
+            }
             this.setLayout(null);
         }
-
+        
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            if (backgroundImage != null) {
+                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+            } else {
+                // Fallback background color
+                g.setColor(new Color(50, 50, 50));
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
         }
+
     }
 }

@@ -161,4 +161,35 @@ public class Util {
 
         return list;
     }
+
+    // Helper method to get a Pokemon by ID
+    // Searches through all stage pokemon lists
+    @SuppressWarnings("unchecked")
+    public Pokemon getPokemonById(int id) {
+        // Check all stages
+        ArrayList<Pokemon>[] allStages = (ArrayList<Pokemon>[]) new ArrayList[]{
+            initializeStage1Pokemon(),
+            initializeStage2Pokemon(),
+            initializeStage3Pokemon(),
+            initializeStage4Pokemon(),
+            initializeStage5Pokemon(),
+            initializeStage6Pokemon()
+        };
+
+        for (ArrayList<Pokemon> stageList : allStages) {
+            for (Pokemon p : stageList) {
+                if (p.pokemonID == id) {
+                    // Return a new instance with duplicates = 1
+                    Pokemon result;
+                    if (p.type2 != null) {
+                        result = new Pokemon(p.pokemonID, p.name, p.type, p.type2);
+                    } else {
+                        result = new Pokemon(p.pokemonID, p.name, p.type);
+                    }
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
 }

@@ -3,7 +3,7 @@ package Logic;
 import java.util.ArrayList;
 import java.util.Random;
 
-import pkmn.Pokemon;
+import Model.Pokemon;
 
 public class Logic {
     ArrayList<Pokemon> list = new ArrayList<>();

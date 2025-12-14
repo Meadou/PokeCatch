@@ -1,5 +1,6 @@
 package Model;
 
+
 import Logic.Types;
 
 public class Pokemon {

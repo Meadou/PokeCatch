@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
+import Logic.FileHandler;
 
 public class Leaderboards extends JFrame {
 
@@ -95,15 +97,21 @@ public class Leaderboards extends JFrame {
         main.add(tableBox);
 
         add(main, BorderLayout.CENTER);
+        
+        // Add action listener for back button
+        back.addActionListener(e -> dispose());
 
-        //-------------Sample Data----------------//
-        addTrainer("ASH", 9999, "/pikachu.png");
-        addTrainer("GARY", 8500, "/squirtle.png");
-        addTrainer("MISTY", 7200, "/squirtle.png");
-        addTrainer("BROCK", 6500, "/bulbasaur.png");
-        addTrainer("ERIKA", 6200, "/bulbasaur.png");
-        addTrainer("SABRINA", 6000, "/charmander.png");
-        addTrainer("LANCE", 5800, "/charmander.png");
+        // Load leaderboards from file
+        loadLeaderboardsFromFile();
+    }
+    
+    // Load leaderboards data from file
+    private void loadLeaderboardsFromFile() {
+        List<FileHandler.LeaderboardEntry> entries = FileHandler.loadLeaderboards();
+        
+        for (FileHandler.LeaderboardEntry entry : entries) {
+            addTrainer(entry.name, entry.score, entry.starterId);
+        }
     }
 
 
@@ -119,15 +127,42 @@ public class Leaderboards extends JFrame {
         return lbl;
     }
 
-    private JLabel makeImageCell(String path) {
-        ImageIcon icon = new ImageIcon(getClass().getResource(path));
-        Image scaled = icon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
-        JLabel lbl = new JLabel(new ImageIcon(scaled), SwingConstants.CENTER);
+    private JLabel makeImageCell(int starterId) {
+        // Load image from Pokemon ID
+        String fileName = String.format("%04d.png", starterId);
+        String userDir = System.getProperty("user.dir");
+        String[] candidates = new String[] {
+            "firered-leafgreen/" + fileName,
+            "../firered-leafgreen/" + fileName,
+            userDir + "/firered-leafgreen/" + fileName,
+            userDir + "/../firered-leafgreen/" + fileName
+        };
+        
+        java.io.File found = null;
+        for (String path : candidates) {
+            java.io.File f = new java.io.File(path);
+            if (f.exists() && f.isFile()) {
+                found = f;
+                break;
+            }
+        }
+        
+        JLabel lbl = new JLabel("", SwingConstants.CENTER);
+        if (found != null) {
+            ImageIcon icon = new ImageIcon(found.getAbsolutePath());
+            Image scaled = icon.getImage().getScaledInstance(28, 28, Image.SCALE_SMOOTH);
+            lbl.setIcon(new ImageIcon(scaled));
+        } else {
+            // If image not found, show ID as text
+            lbl.setText(String.valueOf(starterId));
+            lbl.setFont(new Font("Press Start 2P", Font.PLAIN, 8));
+        }
         return lbl;
     }
 
-    private void addTrainer(String name, int score, String starterPath) {
-        trainers.add(new Trainer(name, score, starterPath));
+    // Add trainer with starter ID instead of image path
+    public void addTrainer(String name, int score, int starterId) {
+        trainers.add(new Trainer(name, score, starterId));
         refresh();
     }
 
@@ -157,7 +192,7 @@ public class Leaderboards extends JFrame {
             //STARTER ICON COLUMN
             gbc.gridx = 1;
             gbc.ipadx = 80;
-            row.add(makeImageCell(t.starterIcon), gbc);
+            row.add(makeImageCell(t.starterId), gbc);
 
             //NAME COLUMN
             gbc.gridx = 2;
@@ -183,12 +218,12 @@ public class Leaderboards extends JFrame {
     static class Trainer {
         String name;
         int score;
-        String starterIcon;
+        int starterId;
 
-        Trainer(String name, int score, String starterIcon) {
+        Trainer(String name, int score, int starterId) {
             this.name = name;
             this.score = score;
-            this.starterIcon = starterIcon;
+            this.starterId = starterId;
         }
     }
 

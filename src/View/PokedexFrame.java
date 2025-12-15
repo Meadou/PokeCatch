@@ -123,7 +123,7 @@ public class PokedexFrame extends JFrame {
         searchPanel.setBorder(BorderFactory.createTitledBorder("Search & Filter"));
 
         searchField = new JTextField(10);
-        JButton searchBtn = new JButton("Search");
+        JButton searchBtn = ButtonStyle.createButton("SEARCH");
         searchBtn.addActionListener(e -> onSearch());
         JPanel searchRow = new JPanel(new BorderLayout(5, 0));
         searchRow.setBackground(new Color(0x8BCFD9));
@@ -152,7 +152,7 @@ public class PokedexFrame extends JFrame {
         // Bottom panel with balance button and status
         JPanel bottomPanel = new JPanel(new BorderLayout(5, 5));
         bottomPanel.setBackground(new Color(0x8BCFD9));
-        JButton balanceBtn = new JButton("Balance Tree");
+        JButton balanceBtn = ButtonStyle.createButton("BALANCE TREE");
         balanceBtn.addActionListener(e -> onBalance());
         statusLabel = new JLabel("Ready");
         bottomPanel.add(balanceBtn, BorderLayout.WEST);
@@ -181,17 +181,25 @@ public class PokedexFrame extends JFrame {
         right.add(detailPanel, BorderLayout.CENTER);
 
         // Navigation buttons
-        JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        navPanel.setBackground(new Color(0xFF4646));
-        JButton prevBtn = new JButton("prev");
-        JButton nextBtn = new JButton("next");
-        prevBtn.setPreferredSize(new Dimension(60, 30));
-        nextBtn.setPreferredSize(new Dimension(60, 30));
-        prevBtn.addActionListener(e -> traversePrev());
-        nextBtn.addActionListener(e -> traverseNext());
-        navPanel.add(prevBtn);
-        navPanel.add(nextBtn);
-        right.add(navPanel, BorderLayout.SOUTH);
+      JPanel navPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5)); 
+navPanel.setBackground(new Color(0xFF4646));
+
+JButton prevBtn = ButtonStyle.createButton("PREV");
+JButton nextBtn = ButtonStyle.createButton("NEXT");
+
+prevBtn.setPreferredSize(new Dimension(80, 40));
+nextBtn.setPreferredSize(new Dimension(80, 40));
+
+prevBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+nextBtn.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+
+prevBtn.addActionListener(e -> traversePrev());
+nextBtn.addActionListener(e -> traverseNext());
+
+navPanel.add(prevBtn);
+navPanel.add(nextBtn);
+right.add(navPanel, BorderLayout.SOUTH);
+
 
         return right;
     }
@@ -618,21 +626,20 @@ public class PokedexFrame extends JFrame {
     }
 
     class DetailPanel extends JPanel {
-        private JLabel idLabel, nameLabel, typeLabel, caughtLabel, dupLabel;
+        private JLabel idLabel, nameLabel, typeLabel, dupLabel;
 
         public DetailPanel() {
             setLayout(new BorderLayout(5,5));
             setBackground(new Color(0xFF4646));
             setBorder(BorderFactory.createTitledBorder("Pokemon Details"));
 
-            JPanel info = new JPanel(new GridLayout(5, 1, 5, 5));
+            JPanel info = new JPanel(new GridLayout(4, 1, 5, 5));
             info.setOpaque(false);
             idLabel = new JLabel("ID: --");
             nameLabel = new JLabel("Name: --");
             typeLabel = new JLabel("Type: --");
-            caughtLabel = new JLabel("First Caught: --");
             dupLabel = new JLabel("Duplicates: --");
-            for (JLabel lbl : new JLabel[]{idLabel, nameLabel, typeLabel, caughtLabel, dupLabel}) {
+            for (JLabel lbl : new JLabel[]{idLabel, nameLabel, typeLabel, dupLabel}) {
                 lbl.setForeground(Color.WHITE);
                 lbl.setFont(new Font("Arial", Font.PLAIN, 12));
                 info.add(lbl);
@@ -652,7 +659,6 @@ public class PokedexFrame extends JFrame {
             }
             String typeText = typeSb.toString();
             typeLabel.setText("Type: " + (typeText.isEmpty() ? "" : typeText));
-            caughtLabel.setText("First Caught: --");
             dupLabel.setText("Duplicates: " + p.getDuplicates());
 
             // Load sprite image

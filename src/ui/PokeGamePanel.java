@@ -1,16 +1,17 @@
 package ui;
-import javax.swing.*;
-
+import Logic.GameState;
 import Logic.Logic;
 import Logic.Stage;
 import Logic.Util;
+import Music.MusicPlayer;
+import View.EndingFrame;
+import View.Loading_Screen;
 import View.PokedexFrame;
-import pkmn.Pokemon;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import Logic.GameState;
+import javax.swing.*;
+import pkmn.Pokemon;
 
 
 public class PokeGamePanel extends JFrame {
@@ -25,26 +26,47 @@ public class PokeGamePanel extends JFrame {
     int gameTime = 15; 
     JLabel timerLabel;
     Timer gameTimer;
-    private Runnable onGameEndCallback;
 
     private JButton pauseButton;
     private JButton resumeButton;
     private boolean isPaused = false;
     private Timer spawnTimer; 
 
-    
+    private final ArrayList<JButton> activeButtons = new ArrayList<>();
+    private final ArrayList<Timer> despawnTimers = new ArrayList<>();
+
+    private double bombChance;
+    private boolean stageCompleted = false;
+    private boolean showStageClear = false;
+    private String stageClearMessage = "";
+    private int caughtCountThisStage = 0;
+    private boolean isFinalStage = false;
+    private Stage currentStage;
+    private JButton nextStageBtn;
+    private JButton pokedexBtn;
+    private JButton exitBtn;
+    private Music.MusicPlayer stageMusic;
+    private int countdown = 3;
+    private boolean isCountdownActive = true;
+    private Timer countdownTimer;
+
+
     public PokeGamePanel(Stage stage) {
-        this(stage, null);
-    }
-    
-    public PokeGamePanel(Stage stage, Runnable onGameEndCallback) {
-        
-        this.onGameEndCallback = onGameEndCallback;
+        this.currentStage = stage;
         this.setTitle("Pokemon Clicker Game - Stage: " + stage.stageName);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setResizable(false);
         this.setSize(1280, 720);
         this.setLocationRelativeTo(null);
+
+        bombChance = switch (stage.stageName) {
+            case "grass" -> 0.15;
+            case "cave" -> 0.25;
+            case "ocean" -> 0.35;
+            case "lava" -> 0.45;
+            default -> 0.2;
+        };
+
 
         String bgPath = getBackgroundPath(stage.stageName);
         BackgroundPanel bgPanel = new BackgroundPanel(bgPath);
@@ -65,7 +87,13 @@ public class PokeGamePanel extends JFrame {
         bgPanel.add(scoreLabel);
 
 
-        spawner(stage.stagePokemon);
+        //spawner(stage.stagePokemon);
+
+        try {
+            stageMusic = new Music.MusicPlayer();
+            //stageMusic.playLoop("/Music/surf_theme.wav");
+        } catch (Exception ignored) {
+        }
 
         gameTimer = new Timer(1000, e -> {  
             gameTime--;
@@ -73,13 +101,45 @@ public class PokeGamePanel extends JFrame {
 
             if (gameTime <= 0) {
                 gameTimer.stop();
-                endStage(); 
+                endStage(stage); 
             }
         });
-        gameTimer.start();
+        //gameTimer.start();
 
 
+        startCountdown(stage);
         this.setVisible(true);
+
+    }
+
+    public boolean isStageCompleted() {
+        return stageCompleted;
+    }
+
+    private void startCountdown(Stage stage) {
+
+        countdownTimer = new Timer(1000, e -> {
+            countdown--;
+            repaint();
+
+            if (countdown <= 0) {
+                countdownTimer.stop();
+                isCountdownActive = false;
+
+                spawner(stage.stagePokemon);
+
+                gameTimer.start();
+
+                try {
+                    stageMusic = new Music.MusicPlayer();
+                    stageMusic.playLoop("/Music/surf_theme.wav");
+                } catch (Exception ignored) {}
+
+                repaint();
+            }
+        });
+
+        countdownTimer.start();
     }
 
 
@@ -90,15 +150,13 @@ public class PokeGamePanel extends JFrame {
     }
 
     private void initPauseResumeButtons() {
-        pauseButton = new JButton("Pause");
+        pauseButton = ui.ButtonStyle.createButton("PAUSE");
         pauseButton.setBounds(this.getWidth()/2 - 50, 10, 100, 30);
-        pauseButton.setFont(new Font("Arial", Font.BOLD, 16));
         pauseButton.addActionListener(e -> pauseGame());
         this.getContentPane().add(pauseButton);
 
-        resumeButton = new JButton("Resume");
+        resumeButton = ui.ButtonStyle.createButton("RESUME");
         resumeButton.setBounds(this.getWidth()/2 - 50, 10, 100, 30);
-        resumeButton.setFont(new Font("Arial", Font.BOLD, 16));
         resumeButton.setVisible(false);
         resumeButton.addActionListener(e -> resumeGame());
         this.getContentPane().add(resumeButton);
@@ -107,25 +165,52 @@ public class PokeGamePanel extends JFrame {
     private void pauseGame() {
         if (!isPaused) {
             isPaused = true;
+
             gameTimer.stop();
             if (spawnTimer != null) spawnTimer.stop();
+
+            // Freeze all despawn timers
+            for (Timer t : despawnTimers) {
+                t.stop();
+            }
+
+            // Disable all active buttons
+            for (JButton btn : activeButtons) {
+                btn.setEnabled(false);
+            }
+
             pauseButton.setVisible(false);
             resumeButton.setVisible(true);
         }
     }
 
+
     private void resumeGame() {
         if (isPaused) {
             isPaused = false;
+
             gameTimer.start();
             if (spawnTimer != null) spawnTimer.start();
+
+            // Resume despawn timers
+            for (Timer t : despawnTimers) {
+                t.start();
+            }
+
+            // Enable buttons again
+            for (JButton btn : activeButtons) {
+                btn.setEnabled(true);
+            }
+
             pauseButton.setVisible(true);
             resumeButton.setVisible(false);
         }
     }
 
 
+
     public void spawnPokemonButton(ArrayList<Pokemon> pokemonList) {
+        if (isCountdownActive) return;
 
         int buttonSize = 170;
 
@@ -140,12 +225,10 @@ public class PokeGamePanel extends JFrame {
         button.setBorder(null);
         button.setContentAreaFilled(false);
 
-        boolean isBomb = Math.random() < 0.2; 
+        boolean isBomb = Math.random() < bombChance;
 
         if (isBomb) {
-            ImageIcon bombIcon = new ImageIcon(
-            getClass().getResource("bomb.png")
-        );
+            ImageIcon bombIcon = new ImageIcon("assets/images/bomb.png");
 
         Image bombImg = bombIcon.getImage().getScaledInstance(
             buttonSize,
@@ -181,24 +264,47 @@ public class PokeGamePanel extends JFrame {
                     Image img = icon.getImage();
                     Image whiteImg = createWhiteSilhouette(img, button.getWidth(), button.getHeight());
                     button.setIcon(new ImageIcon(whiteImg));
+                    
                 }
 
                 // Disable the button so it can't be clicked again
                 button.setEnabled(false);
 
-                // Remove after short delay
                 Timer effectTimer = new Timer(300, ev -> {
                     this.remove(button);
+                    activeButtons.remove(button);
                     this.repaint();
                 });
                 effectTimer.setRepeats(false);
                 effectTimer.start();
 
+
                 // Add caught Pokémon & update score
                 gameState.addCaughtPokemon(pokemon);
                 gameState.addScore(100);
                 scoreLabel.setText("Score: " + gameState.getGlobalScore());
+                try {
+                    MusicPlayer.playOnce("/Music/catch1.wav");
+                } catch (Exception ignore) {
+                }
             });
+            
+        this.add(button);
+        this.repaint();
+
+        Timer despawnTimer = new Timer(1000, e -> {
+            Timer t = (Timer) e.getSource();
+
+            t.stop();
+            this.remove(button);
+            activeButtons.remove(button);
+            despawnTimers.remove(t);
+            this.repaint();
+        });
+
+        despawnTimer.setRepeats(false);
+        despawnTimers.add(despawnTimer);
+        despawnTimer.start();
 
         }
 
@@ -214,70 +320,156 @@ public class PokeGamePanel extends JFrame {
     }
 
     private void endGame() {
+        // stop stage music on game over
+        try {
+            if (stageMusic != null) stageMusic.stop();
+        } catch (Exception ignored) {}
         for (Component comp : this.getContentPane().getComponents()) {
             if (comp instanceof JButton) {
                 comp.setEnabled(false);
             }
         }
 
-        JOptionPane.showMessageDialog(this, "Game Over!");
+        // Show custom game over screen instead of JOptionPane
+        SwingUtilities.invokeLater(() -> {
+            new View.GameOverFrame();
+        });
+        this.dispose();
     }
 
-    private void endStage() {
-        if (gameTimer != null) {
-            gameTimer.stop();
-        }
+   private void endStage(Stage currStage) {
 
+        // Stop music
+        try {
+            if (stageMusic != null) stageMusic.stop();
+        } catch (Exception ignored) {}
+
+        // Stop timers
+        if (gameTimer != null) gameTimer.stop();
+        if (spawnTimer != null) spawnTimer.stop();
+        for (Timer t : despawnTimers) t.stop();
+
+        // Disable gameplay buttons
         for (Component comp : this.getContentPane().getComponents()) {
-            if (comp instanceof JButton) {
+            if (comp instanceof JButton && comp != pauseButton && comp != resumeButton) {
                 comp.setEnabled(false);
             }
         }
 
-        int caughtCount = gameState.getCaughtPokemonArray().size();
+        caughtCountThisStage = gameState.getCaughtPokemonArray().size();
         gameState.transferCaughtPokemonToBST();
 
-        String message = "Stage Completed!\nScore: " + gameState.getGlobalScore() +
-                        "\nCaught Pokémon this stage: " + caughtCount;
+        stageClearMessage =
+                "Stage Completed!\nScore: " + gameState.getGlobalScore() +
+                "\nCaught Pokémon this stage: " + caughtCountThisStage;
 
-        Object[] options = {"Next Stage", "Open Pokédex", "Exit"};
+        isFinalStage = currStage.stageName.equalsIgnoreCase("lava");
 
-        int choice = JOptionPane.showOptionDialog(
-            this,
-            message,
-            "Stage Complete",
-            JOptionPane.DEFAULT_OPTION,
-            JOptionPane.INFORMATION_MESSAGE,
-            null,
-            options,
-            options[0]
-        );
+        int btnWidth = 200;
+        int btnHeight = 40;
+        int centerX = 640;
+        int btnY = 500;
+        int spacing = 50;
 
-        switch (choice) {
-            case 0 -> { /* Next Stage: empty */ }
-            case 1 -> {
-                this.dispose();
-                new PokedexFrame();
+        // ===== NEXT / CONTINUE BUTTON =====
+        nextStageBtn = ButtonStyle.createButton(isFinalStage ? "CONTINUE" : "NEXT STAGE");
+        nextStageBtn.setBounds(centerX - btnWidth - 10, btnY, btnWidth, btnHeight);
+        nextStageBtn.addActionListener(e -> {
+            stageCompleted = true;
+            if(isFinalStage) {
+                new EndingFrame(gameState, stageMusic);
             }
-            case 2 -> System.exit(0);
-        }
+            showLoadingScreenOnFrame(() -> {
+                this.dispose();
+                SwingUtilities.invokeLater(() -> {
+                    View.StageManager.nextStage(currStage);
+                });
+            });
+        });
+        this.getContentPane().add(nextStageBtn);
 
-        dispose();
+        // ===== POKEDEX BUTTON =====
+        pokedexBtn = ButtonStyle.createButton("OPEN POKEDEX");
+        pokedexBtn.setBounds(centerX - btnWidth / 2, btnY + spacing, btnWidth, btnHeight);
+        pokedexBtn.addActionListener(e -> {
+            PokedexFrame pokedex = new PokedexFrame();
+            pokedex.setStageClearPanel(this);
+        });
+        this.getContentPane().add(pokedexBtn);
+
+        // ===== EXIT BUTTON =====
+        exitBtn = ButtonStyle.createButton("EXIT");
+        exitBtn.setBounds(centerX + 10, btnY, btnWidth, btnHeight);
+        exitBtn.addActionListener(e -> {
+            stageCompleted = true;
+            this.dispose();
+        });
+        this.getContentPane().add(exitBtn);
+
+        showStageClear = true;
+        repaint();
     }
 
+
+    private int getNextStageNumber(Stage currStage) {
+        String name = currStage.stageName.toLowerCase();
+        if (name.equals("grass")) return 2;
+        if (name.equals("cave")) return 3;
+        if (name.equals("ocean")) return 4;
+        if (name.equals("lava")) return 4;  // lava is final stage, but return 4 for safety
+        return 1;
+    }
+
+    public void showStageClearOverlay() {
+        showStageClear = true;
+        repaint();
+    }
+
+    // Show loading screen on this frame (similar to Intro.showLoadingScreenOnFrame)
+    public void showLoadingScreenOnFrame(Runnable onComplete) {
+        if (this == null) return;
+        
+        this.getContentPane().removeAll();
+        
+        // Create a black panel to hold the loading screen
+        JPanel blackPanel = new JPanel(new GridBagLayout());
+        blackPanel.setBackground(Color.BLACK);
+        blackPanel.setOpaque(true);
+        
+        Loading_Screen loadingScreen = new Loading_Screen(2000, 0x000000);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        blackPanel.add(loadingScreen, gbc);
+        
+        this.setContentPane(blackPanel);
+        
+        this.revalidate();
+        this.repaint();
+        
+        // Execute callback after loading screen completes
+        Timer completeTimer = new Timer(2500, e -> {
+            if (onComplete != null) {
+                onComplete.run();
+            }
+        });
+        completeTimer.setRepeats(false);
+        completeTimer.start();
+    }
     
     private String getBackgroundPath(String stageName) {
         switch (stageName.toLowerCase()) {
             case "grass":
-                return "backgrounds/grass.png";
+                return "Backgrounds/grass.png";
             case "cave":
-                return "backgrounds/cave.png";
+                return "Backgrounds/cave.png";
             case "ocean":
-                return "backgrounds/ocean.png";
+                return "Backgrounds/ocean.png";
             case "lava":
-                return "backgrounds/lava.png";
+                return "Backgrounds/lava.png";
             default:
-                return "backgrounds/default.png";
+                return "Backgrounds/grass.png";
         }
     }
 
@@ -291,7 +483,6 @@ public class PokeGamePanel extends JFrame {
             if (file.exists()) {
                 this.backgroundImage = new ImageIcon(file.getAbsolutePath()).getImage();
             } else {
-
                 this.backgroundImage = null;
             }
             this.setLayout(null);
@@ -300,13 +491,74 @@ public class PokeGamePanel extends JFrame {
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g.create();
+            
             if (backgroundImage != null) {
-                g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
+                g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
             } else {
                 // Fallback background color
-                g.setColor(new Color(50, 50, 50));
-                g.fillRect(0, 0, getWidth(), getHeight());
+                g2d.setColor(new Color(50, 50, 50));
+                g2d.fillRect(0, 0, getWidth(), getHeight());
             }
+            
+            // Draw stage clear overlay if needed
+            if (showStageClear) {
+                // Semi-transparent overlay
+                g2d.setColor(new Color(0, 0, 0, 200));
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                
+                // Draw message box
+                int boxWidth = 500;
+                int boxHeight = 200;
+                int boxX = (getWidth() - boxWidth) / 2;
+                int boxY = (getHeight() - boxHeight) / 2;
+                
+                g2d.setColor(new Color(30, 30, 30));
+                g2d.fillRect(boxX, boxY, boxWidth, boxHeight);
+                g2d.setColor(Color.WHITE);
+                g2d.setStroke(new BasicStroke(3));
+                g2d.drawRect(boxX, boxY, boxWidth, boxHeight);
+                
+                // Draw text
+                Font font = ButtonStyle.getFont().deriveFont(Font.BOLD, 24f);
+                g2d.setFont(font);
+                g2d.setColor(Color.WHITE);
+                g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                
+                String[] lines = stageClearMessage.split("\n");
+                int textY = boxY + 50;
+                for (String line : lines) {
+                    FontMetrics fm = g2d.getFontMetrics();
+                    int textX = boxX + (boxWidth - fm.stringWidth(line)) / 2;
+                    g2d.drawString(line, textX, textY);
+                    textY += fm.getHeight() + 10;
+                }
+            }
+
+        if (isCountdownActive) {
+
+            // Darken background
+            g2d.setColor(new Color(0, 0, 0, 180));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+
+            // Draw big countdown number
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 140));
+            g2d.setRenderingHint(
+                RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+            );
+
+            String text = String.valueOf(countdown);
+            FontMetrics fm = g2d.getFontMetrics();
+            int x = (getWidth() - fm.stringWidth(text)) / 2;
+            int y = (getHeight() + fm.getAscent()) / 2;
+
+            g2d.drawString(text, x, y);
+        }
+
+                    
+            g2d.dispose();
         }
 
     }
@@ -316,7 +568,6 @@ public class PokeGamePanel extends JFrame {
         Graphics2D g2d = img.createGraphics();
         g2d.drawImage(original, 0, 0, width, height, null);
 
-        // Set all non-transparent pixels to white
         for (int x = 0; x < img.getWidth(); x++) {
             for (int y = 0; y < img.getHeight(); y++) {
                 int alpha = (img.getRGB(x, y) >> 24) & 0xff;

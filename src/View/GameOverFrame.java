@@ -32,7 +32,6 @@ public class GameOverFrame extends JFrame {
 
         pokedex.addActionListener(e -> {
             new PokedexFrame();
-            dispose();
         });
 
         mainmenu.addActionListener(e -> {

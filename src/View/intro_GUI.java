@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-
-import Logic.GameState;
 import ui.ButtonStyle;
 
 public class intro_GUI {
@@ -15,7 +13,6 @@ public class intro_GUI {
     public static class MainFrame extends JFrame {
         CardLayout cardLayout;
         JPanel mainPanel;
-
 
 
         public MainFrame() {
@@ -161,19 +158,21 @@ public class intro_GUI {
                 contBtn.setMaximumSize(btnSize);
                 contBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
                 contBtn.addActionListener(e -> {
-                    
-                    if (GameState.getCurrentStage() != null) {
-                        dispose();
-                        new ChooseMap();
-                    } else {
-                         JOptionPane.showMessageDialog(
+                    try {
+                        if (menuMusic != null) menuMusic.stop();
+                    } catch (Exception ignore) {}
+
+                    try {
+                        Class<?> mainClass = Class.forName("Main");
+                        mainClass.getMethod("continueGame").invoke(null);
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(
                             null, 
-                            "No current save found!", 
-                            "Warning", 
-                            JOptionPane.WARNING_MESSAGE
+                            "No save file found! Please start a new game.", 
+                            "Continue Game", 
+                            JOptionPane.INFORMATION_MESSAGE
                         );
                     }
-                    
                 });
 
                 JButton backBtn = ButtonStyle.createButton("BACK");

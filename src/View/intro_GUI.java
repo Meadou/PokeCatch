@@ -19,19 +19,20 @@ public class intro_GUI {
         public MainFrame() {
             cardLayout = new CardLayout();
             mainPanel = new JPanel(cardLayout);
-
+            MusicPlayer mainMenuMusic = new Music.MusicPlayer();
+            
             StartScreen screen = new StartScreen(this);
             PlayPanel playPanel = new PlayPanel(this);
             LeaderboardsPanel leaderboardsPanel = new LeaderboardsPanel(this);
             GamePanel gamePanel = new GamePanel(this);
             CurrentStagePanel currentStagePanel = new CurrentStagePanel(this);
-
+            MusicPlayer.playOnce(getName());
             mainPanel.add(screen, "Screen");
             mainPanel.add(playPanel, "Play");
             mainPanel.add(leaderboardsPanel, "Leaderboards");
             mainPanel.add(gamePanel,"New Game");
             mainPanel.add(currentStagePanel,"Continue");
-
+            mainMenuMusic.playLoop("Music/MainMenu.wav");
             add(mainPanel);
             setSize(1280, 720);
             setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -133,7 +134,7 @@ public class intro_GUI {
                 newGBtn.setMaximumSize(btnSize);
                 newGBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
                 newGBtn.addActionListener(e -> {
-                    // stop menu music and start new game (pass the menu frame as owner so loading overlays appear on menu)
+                    
                     try {
                         if (menuMusic != null) menuMusic.stop();
                     } catch (Exception ignore) {}

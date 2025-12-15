@@ -4,6 +4,7 @@ import Logic.Logic;
 import Logic.Stage;
 import Logic.Util;
 import Music.MusicPlayer;
+import View.EndingFrame;
 import View.Loading_Screen;
 import View.PokedexFrame;
 import java.awt.*;
@@ -45,6 +46,10 @@ public class PokeGamePanel extends JFrame {
     private JButton pokedexBtn;
     private JButton exitBtn;
     private Music.MusicPlayer stageMusic;
+    private int countdown = 3;
+    private boolean isCountdownActive = true;
+    private Timer countdownTimer;
+
 
     public PokeGamePanel(Stage stage) {
         this.currentStage = stage;
@@ -82,12 +87,11 @@ public class PokeGamePanel extends JFrame {
         bgPanel.add(scoreLabel);
 
 
-        spawner(stage.stagePokemon);
+        //spawner(stage.stagePokemon);
 
-        // start stage music
         try {
             stageMusic = new Music.MusicPlayer();
-            stageMusic.playLoop("/Music/surf_theme.wav");
+            //stageMusic.playLoop("/Music/surf_theme.wav");
         } catch (Exception ignored) {
         }
 
@@ -100,15 +104,44 @@ public class PokeGamePanel extends JFrame {
                 endStage(stage); 
             }
         });
-        gameTimer.start();
+        //gameTimer.start();
 
 
+        startCountdown(stage);
         this.setVisible(true);
+
     }
 
     public boolean isStageCompleted() {
         return stageCompleted;
     }
+
+    private void startCountdown(Stage stage) {
+
+        countdownTimer = new Timer(1000, e -> {
+            countdown--;
+            repaint();
+
+            if (countdown <= 0) {
+                countdownTimer.stop();
+                isCountdownActive = false;
+
+                spawner(stage.stagePokemon);
+
+                gameTimer.start();
+
+                try {
+                    stageMusic = new Music.MusicPlayer();
+                    stageMusic.playLoop("/Music/surf_theme.wav");
+                } catch (Exception ignored) {}
+
+                repaint();
+            }
+        });
+
+        countdownTimer.start();
+    }
+
 
     public void spawner(ArrayList<Pokemon> pokemonList) {
         spawnTimer = new Timer(500, e -> spawnPokemonButton(pokemonList)); 
@@ -177,6 +210,7 @@ public class PokeGamePanel extends JFrame {
 
 
     public void spawnPokemonButton(ArrayList<Pokemon> pokemonList) {
+        if (isCountdownActive) return;
 
         int buttonSize = 170;
 
@@ -304,23 +338,18 @@ public class PokeGamePanel extends JFrame {
     }
 
    private void endStage(Stage currStage) {
-        // stop stage music when stage ends
+
+        // Stop music
         try {
             if (stageMusic != null) stageMusic.stop();
         } catch (Exception ignored) {}
-        if (gameTimer != null) {
-            gameTimer.stop();
-        }
 
-        // Stop all timers
-        if (spawnTimer != null) {
-            spawnTimer.stop();
-        }
-        for (Timer t : despawnTimers) {
-            t.stop();
-        }
+        // Stop timers
+        if (gameTimer != null) gameTimer.stop();
+        if (spawnTimer != null) spawnTimer.stop();
+        for (Timer t : despawnTimers) t.stop();
 
-        // Disable all pokemon buttons
+        // Disable gameplay buttons
         for (Component comp : this.getContentPane().getComponents()) {
             if (comp instanceof JButton && comp != pauseButton && comp != resumeButton) {
                 comp.setEnabled(false);
@@ -330,70 +359,45 @@ public class PokeGamePanel extends JFrame {
         caughtCountThisStage = gameState.getCaughtPokemonArray().size();
         gameState.transferCaughtPokemonToBST();
 
-        stageClearMessage = "Stage Completed!\nScore: " + gameState.getGlobalScore() +
-                        "\nCaught Pokémon this stage: " + caughtCountThisStage;
+        stageClearMessage =
+                "Stage Completed!\nScore: " + gameState.getGlobalScore() +
+                "\nCaught Pokémon this stage: " + caughtCountThisStage;
 
         isFinalStage = currStage.stageName.equalsIgnoreCase("lava");
 
-        // Create buttons with Ending.java style
         int btnWidth = 200;
         int btnHeight = 40;
         int centerX = 640;
         int btnY = 500;
         int spacing = 50;
 
-        if (!isFinalStage) {
-            nextStageBtn = ButtonStyle.createButton("NEXT STAGE");
-            nextStageBtn.setBounds(centerX - btnWidth - 10, btnY, btnWidth, btnHeight);
-            nextStageBtn.addActionListener(e -> {
-                stageCompleted = true;
-                // Show loading screen before transitioning
-                showLoadingScreenOnFrame(() -> {
-                    this.dispose();
-                    // Get next stage number
-                    int nextStageNum = getNextStageNumber(currStage);
-                    SwingUtilities.invokeLater(() -> {
-                        try {
-                            Class<?> stageWindowClass = Class.forName("View.StageWindow");
-                            java.lang.reflect.Method method = stageWindowClass.getDeclaredMethod("stageSelector", int.class);
-                            method.setAccessible(true);
-                            method.invoke(null, nextStageNum);
-                        } catch (Exception ex) {
-                            System.out.println("Error starting next stage: " + ex.getMessage());
-                        }
-                    });
+        // ===== NEXT / CONTINUE BUTTON =====
+        nextStageBtn = ButtonStyle.createButton(isFinalStage ? "CONTINUE" : "NEXT STAGE");
+        nextStageBtn.setBounds(centerX - btnWidth - 10, btnY, btnWidth, btnHeight);
+        nextStageBtn.addActionListener(e -> {
+            stageCompleted = true;
+            if(isFinalStage) {
+                new EndingFrame(gameState, stageMusic);
+            }
+            showLoadingScreenOnFrame(() -> {
+                this.dispose();
+                SwingUtilities.invokeLater(() -> {
+                    View.StageManager.nextStage(currStage);
                 });
             });
-            this.getContentPane().add(nextStageBtn);
-        } else {
-            // For final stage (lava), show a "CONTINUE" button that goes to ending
-            nextStageBtn = ButtonStyle.createButton("CONTINUE");
-            nextStageBtn.setBounds(centerX - btnWidth - 10, btnY, btnWidth, btnHeight);
-            nextStageBtn.addActionListener(e -> {
-                stageCompleted = true;
-                // Show loading screen before transitioning to ending
-                showLoadingScreenOnFrame(() -> {
-                    this.dispose();
-                    // Show ending after loading
-                    SwingUtilities.invokeLater(() -> {
-                        Music.MusicPlayer musicPlayer = new Music.MusicPlayer();
-                        View.EndingFrame endingFrame = new View.EndingFrame(gameState, musicPlayer);
-                        endingFrame.showEnding();
-                    });
-                });
-            });
-            this.getContentPane().add(nextStageBtn);
-        }
+        });
+        this.getContentPane().add(nextStageBtn);
 
+        // ===== POKEDEX BUTTON =====
         pokedexBtn = ButtonStyle.createButton("OPEN POKEDEX");
-        pokedexBtn.setBounds(centerX - btnWidth/2, btnY + spacing, btnWidth, btnHeight);
+        pokedexBtn.setBounds(centerX - btnWidth / 2, btnY + spacing, btnWidth, btnHeight);
         pokedexBtn.addActionListener(e -> {
             PokedexFrame pokedex = new PokedexFrame();
-            // Store reference so we can go back
             pokedex.setStageClearPanel(this);
         });
         this.getContentPane().add(pokedexBtn);
 
+        // ===== EXIT BUTTON =====
         exitBtn = ButtonStyle.createButton("EXIT");
         exitBtn.setBounds(centerX + 10, btnY, btnWidth, btnHeight);
         exitBtn.addActionListener(e -> {
@@ -405,6 +409,7 @@ public class PokeGamePanel extends JFrame {
         showStageClear = true;
         repaint();
     }
+
 
     private int getNextStageNumber(Stage currStage) {
         String name = currStage.stageName.toLowerCase();
@@ -529,7 +534,30 @@ public class PokeGamePanel extends JFrame {
                     textY += fm.getHeight() + 10;
                 }
             }
-            
+
+        if (isCountdownActive) {
+
+            // Darken background
+            g2d.setColor(new Color(0, 0, 0, 180));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+
+            // Draw big countdown number
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 140));
+            g2d.setRenderingHint(
+                RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON
+            );
+
+            String text = String.valueOf(countdown);
+            FontMetrics fm = g2d.getFontMetrics();
+            int x = (getWidth() - fm.stringWidth(text)) / 2;
+            int y = (getHeight() + fm.getAscent()) / 2;
+
+            g2d.drawString(text, x, y);
+        }
+
+                    
             g2d.dispose();
         }
 

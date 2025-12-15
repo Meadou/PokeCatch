@@ -617,7 +617,6 @@ public class PokedexFrame extends JFrame {
         }
     }
 
-    // Inner class: DetailPanel for Pokemon information
     class DetailPanel extends JPanel {
         private JLabel idLabel, nameLabel, typeLabel, caughtLabel, dupLabel;
 

@@ -6,7 +6,7 @@ import Model.PlayerData;
 import Music.MusicPlayer;
 import View.Loading_Screen;
 import View.NameDialog;
-import View.StageWindow;
+import View.StageManager;
 import View.intro_GUI;
 import java.awt.*;
 import java.util.List;
@@ -226,7 +226,7 @@ public class Main {
     }
 
     private static void startStageSequence(int startStage) {
-        StageWindow.stageSelector(startStage);
+        StageManager.stageSelector(startStage);
     }
 
     private static void showPostStageOptions(int lastStage) {
@@ -242,7 +242,7 @@ public class Main {
         
         Logic.Stage currStage = gameState.getCurrentStage();
         if (currStage != null) {
-            StageWindow.nextStage(currStage);
+            StageManager.nextStage(currStage);
         }
         
         isDialogShowing = false;

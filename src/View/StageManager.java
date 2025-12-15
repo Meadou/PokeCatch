@@ -5,9 +5,12 @@ import Logic.Stage;
 import Logic.Util;
 import Music.MusicPlayer;
 import java.util.Scanner;
+
+import javax.swing.SwingUtilities;
+
 import ui.PokeGamePanel;
 
-public class StageWindow {
+public class StageManager {
     public static Scanner sc = new Scanner(System.in);
     public PokeGamePanel game;
     public static Util u = new Util();
@@ -15,14 +18,6 @@ public class StageWindow {
     public static Stage stage2 = new Stage("cave", u.initializeStage2Pokemon(), false);
     public static Stage stage3 = new Stage("ocean", u.initializeStage3Pokemon(), false);
     public static Stage stage4 = new Stage("lava", u.initializeStage4Pokemon(), false);
-     public static void main(String[] args) {
-        new StageSelectionPlaceholder();
-
-        int choice = StageSelectionPlaceholder.choice;
-
-        
-
-    }
 
     public static void stageSelector(int stageNum) {
             switch(stageNum) {
@@ -66,13 +61,13 @@ public class StageWindow {
                 new PokeGamePanel(stage4);
             }
             case "lava" -> {
-                // Game completed after stage 4 (lava)
                 GameState gameState = GameState.getInstance();
                 MusicPlayer musicPlayer = new MusicPlayer();
-                EndingFrame endingFrame = new EndingFrame(gameState, musicPlayer);
-                if (gameState.isUnlocked()) {
+
+                SwingUtilities.invokeLater(() -> {
+                    EndingFrame endingFrame = new EndingFrame(gameState, musicPlayer);
                     endingFrame.showEnding();
-                }
+                });
             }
             default -> new PokeGamePanel(stage1);
         }

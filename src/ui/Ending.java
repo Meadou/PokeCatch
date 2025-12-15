@@ -20,7 +20,7 @@ public class Ending extends JPanel implements ActionListener {
     private int step = 0;
     private int ticks = 0;
 
-    private final String[] credits = {"credits", "Raven Villarante", "Marjhun Pamilar", "Emman Pedoroso", "Joshua Bontuyan", "Vincent Añonuevo"};
+    private final String[] credits = {"credits", "Raven Villarante", "Marjhun Pamilar", "Emman Pedoroso", "Joshua Algene Bontuyan", "Vincent Añonuevo"};
     private int creditsY;
     private boolean finalButtonsVisible = false;
 

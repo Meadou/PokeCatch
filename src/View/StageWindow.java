@@ -66,7 +66,6 @@ public class StageWindow {
                 new PokeGamePanel(stage4);
             }
             case "lava" -> {
-                // Game completed after stage 4 (lava)
                 GameState gameState = GameState.getInstance();
                 MusicPlayer musicPlayer = new MusicPlayer();
                 EndingFrame endingFrame = new EndingFrame(gameState, musicPlayer);

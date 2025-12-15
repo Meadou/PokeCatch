@@ -1,6 +1,7 @@
 package ui;
 import Logic.GameState;
 import Logic.Logic;
+import Logic.PlayerDataManager;
 import Logic.Stage;
 import Logic.Util;
 import Music.MusicPlayer;
@@ -384,9 +385,18 @@ public class PokeGamePanel extends JFrame {
         nextStageBtn.setBounds(centerX - btnWidth - 10, btnY, btnWidth, btnHeight);
         nextStageBtn.addActionListener(e -> {
             stageCompleted = true;
+            // Save progress and unlock next stage
+            try {
+                int next = getNextStageNumber(currStage);
+                PlayerDataManager.saveProgress(gameState, next);
+            } catch (Exception ex) {
+                System.err.println("Error saving progress: " + ex.getMessage());
+            }
+
             if(isFinalStage) {
                 new EndingFrame(gameState, stageMusic);
             }
+
             showLoadingScreenOnFrame(() -> {
                 this.dispose();
                 SwingUtilities.invokeLater(() -> {
@@ -410,6 +420,14 @@ public class PokeGamePanel extends JFrame {
         exitBtn.setBounds(centerX + 10, btnY, btnWidth, btnHeight);
         exitBtn.addActionListener(e -> {
             stageCompleted = true;
+            // Save progress before exiting
+            try {
+                int next = getNextStageNumber(currStage);
+                PlayerDataManager.saveProgress(gameState, next);
+            } catch (Exception ex) {
+                System.err.println("Error saving progress on exit: " + ex.getMessage());
+            }
+
             this.dispose();
         });
         this.getContentPane().add(exitBtn);

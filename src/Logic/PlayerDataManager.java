@@ -1,8 +1,8 @@
 package Logic;
 
 import Model.PlayerData;
-import pkmn.Pokemon;
 import java.util.List;
+import pkmn.Pokemon;
 
 public class PlayerDataManager {
     private static PlayerData currentPlayerData = null;
@@ -28,8 +28,8 @@ public class PlayerDataManager {
             currentPlayerData.addCaughtPokemon(p.pokemonID);
         }
         
-        // Update score
-        currentPlayerData.calculateScore();
+        // Update score from game state's global score (preserve actual gameplay score)
+        currentPlayerData.score = gameState.getGlobalScore();
     }
 
     // Load player data and sync to GameState

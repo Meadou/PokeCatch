@@ -2,9 +2,8 @@ package View;
 
 import Logic.GameState;
 import Music.MusicPlayer;
-import ui.Ending;
-
 import javax.swing.*;
+import ui.Ending;
 
 public class EndingFrame extends JFrame {
     private final GameState state;
@@ -15,7 +14,7 @@ public class EndingFrame extends JFrame {
         this.state = state;
         this.music = music;
 
-        Ending view = new Ending(state);
+        Ending view = new Ending(state, this);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setContentPane(view);
         setSize(1280, 720);

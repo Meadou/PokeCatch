@@ -126,8 +126,7 @@ public class FileHandler {
     public static void saveToLeaderboards(PlayerData playerData) {
         ensureSavesDirectory();
         
-        // Calculate final score before saving
-        playerData.calculateScore();
+        // Use playerData.score (already set from GameState) for leaderboards
         
         try (PrintWriter writer = new PrintWriter(new FileWriter(LEADERBOARDS_FILE, true))) {
             // Format: NAME|STARTER_ID|SCORE|UNIQUE_POKEMON|STAGES_COMPLETED

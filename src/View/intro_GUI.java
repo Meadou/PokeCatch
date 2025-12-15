@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+
+import Logic.GameState;
 import ui.ButtonStyle;
 
 public class intro_GUI {
@@ -159,8 +161,19 @@ public class intro_GUI {
                 contBtn.setMaximumSize(btnSize);
                 contBtn.setAlignmentX(Component.CENTER_ALIGNMENT);
                 contBtn.addActionListener(e -> {
-                    // Placeholder for continue
-                    System.out.println("Continue button clicked (placeholder). Implement load/save handling later.");
+                    
+                    if (GameState.getCurrentStage() != null) {
+                        dispose();
+                        new ChooseMap();
+                    } else {
+                         JOptionPane.showMessageDialog(
+                            null, 
+                            "No current save found!", 
+                            "Warning", 
+                            JOptionPane.WARNING_MESSAGE
+                        );
+                    }
+                    
                 });
 
                 JButton backBtn = ButtonStyle.createButton("BACK");

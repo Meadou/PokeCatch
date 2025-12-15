@@ -4,6 +4,7 @@ import Logic.PlayerDataManager;
 import Logic.Util;
 import Model.PlayerData;
 import Music.MusicPlayer;
+import View.ChooseMap;
 import View.Loading_Screen;
 import View.NameDialog;
 import View.StageManager;
@@ -182,7 +183,7 @@ public class Main {
         System.out.println("Score: " + playerData.score);
         System.out.println("Pokemon Caught: " + playerData.caughtPokemonIds.size());
         
-        launchGame(playerData.starterPokemonId, playerData.playerName, playerData.currentStage, true, null);
+        new ChooseMap();
     }
 
     private static int getIntInput() {

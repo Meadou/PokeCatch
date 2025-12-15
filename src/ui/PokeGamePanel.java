@@ -7,6 +7,9 @@ import Music.MusicPlayer;
 import View.EndingFrame;
 import View.Loading_Screen;
 import View.PokedexFrame;
+import View.intro_GUI;
+import View.intro_GUI.MainFrame;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -337,6 +340,7 @@ public class PokeGamePanel extends JFrame {
         SwingUtilities.invokeLater(() -> {
             new View.GameOverFrame();
         });
+        GameState.setCurrenStage(null);
         this.dispose();
     }
 
@@ -367,6 +371,7 @@ public class PokeGamePanel extends JFrame {
         caughtCountThisStage = gameState.getCaughtPokemonArray().size();
         gameState.transferCaughtPokemonToBST();
 
+        unlockNextStage(currStage);
         stageClearMessage =
                 "Stage Completed!\nScore: " + gameState.getGlobalScore() +
                 "\nCaught Pokémon this stage: " + caughtCountThisStage;
@@ -411,6 +416,7 @@ public class PokeGamePanel extends JFrame {
         exitBtn.addActionListener(e -> {
             stageCompleted = true;
             this.dispose();
+            new MainFrame();
         });
         this.getContentPane().add(exitBtn);
 
@@ -465,6 +471,18 @@ public class PokeGamePanel extends JFrame {
         completeTimer.setRepeats(false);
         completeTimer.start();
     }
+
+    private void unlockNextStage(Stage currStage) {
+        switch (currStage.stageName.toLowerCase()) {
+            case "grass" -> View.StageManager.stage2.isUnlocked = true;
+            case "cave"  -> View.StageManager.stage3.isUnlocked = true;
+            case "ocean" -> View.StageManager.stage4.isUnlocked = true;
+            case "lava"  -> {
+                // Final stage — nothing to unlock
+            }
+        }
+    }
+
     
     private String getBackgroundPath(String stageName) {
         switch (stageName.toLowerCase()) {

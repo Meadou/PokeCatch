@@ -48,19 +48,10 @@ public class StageManager {
 
     public static void nextStage(Stage currStage) {
         switch (currStage.stageName) {
-            case "grass" -> {
-                stage2.isUnlocked = true;
-                new PokeGamePanel(stage2);
-            }
-            case "cave" -> {
-                stage3.isUnlocked = true;
-                new PokeGamePanel(stage3);
-            }
-            case "ocean" -> {
-                stage4.isUnlocked = true;
-                new PokeGamePanel(stage4);
-            }
-            case "lava" -> {
+            case "grass" -> new PokeGamePanel(stage2);
+            case "cave"  -> new PokeGamePanel(stage3);
+            case "ocean" -> new PokeGamePanel(stage4);
+            case "lava"  -> {
                 GameState gameState = GameState.getInstance();
                 MusicPlayer musicPlayer = new MusicPlayer();
 
@@ -72,5 +63,6 @@ public class StageManager {
             default -> new PokeGamePanel(stage1);
         }
     }
+
 }
 

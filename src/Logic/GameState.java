@@ -19,7 +19,7 @@ public class GameState {
         currentStage = null;
     }
 
-    public Stage getCurrentStage() {
+    public static Stage getCurrentStage() {
         return currentStage;
     }
 
@@ -79,5 +79,7 @@ public class GameState {
     public boolean isUnlocked() {
         return globalScore >= 5000; // Example threshold for unlocking ending
     }
+
+    
 }
 

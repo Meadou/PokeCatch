@@ -1,4 +1,9 @@
+package View;
+
 import javax.swing.*;
+
+import View.intro_GUI.MainFrame;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
@@ -20,14 +25,18 @@ public class ChooseMap extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
 
-        BackgroundPanel content = new BackgroundPanel("/ChooseMapResources/background.png");
+        BackgroundPanel content =
+                new BackgroundPanel("/ChooseMapResources/background.png");
         setContentPane(content);
 
+        /* ================= BACK BUTTON ================= */
         try {
             ImageIcon backIcon = new ImageIcon(Objects.requireNonNull(
                     getClass().getResource("/ChooseMapResources/back_button.png")));
             JLabel backButton = new JLabel(backIcon);
-            backButton.setBounds(20, 20, backIcon.getIconWidth(), backIcon.getIconHeight());
+            backButton.setBounds(20, 20,
+                    backIcon.getIconWidth(),
+                    backIcon.getIconHeight());
             content.add(backButton);
 
             backButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -35,19 +44,14 @@ public class ChooseMap extends JFrame {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
                     dispose();
-                    System.out.println("Back button pressed!");
-                    // Insert code to open main menu or other screen
-                    /*
-                    *INSERT INYONG CODE DIRI PAG PRESS sa BUTTON*
-                    */
-                    // e.g., new MainMenu().setVisible(true);
+                    new MainFrame();
                 }
             });
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
+        /* ================= TITLE ================= */
         JLabel titleLabel = new JLabel("Choose Map");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
@@ -55,31 +59,36 @@ public class ChooseMap extends JFrame {
         titleLabel.setBounds(0, 20, 1280, 60);
         content.add(titleLabel);
 
+        /* ================= MAP PANELS ================= */
         int marginX = 100, marginTop = 100, marginBottom = 200, gap = 50;
         int imageW = (1280 - marginX * 2 - gap) / 2;
         int imageH = (720 - marginTop - marginBottom - gap) / 2;
 
-
-        ImagePanel grass = new ImagePanel("/ChooseMapResources/grass.png", "grass", true);
+        ImagePanel grass = new ImagePanel(
+                "/ChooseMapResources/grass.png", "grass");
         grass.setBounds(marginX, marginTop, imageW, imageH);
 
-        ImagePanel cave = new ImagePanel("/ChooseMapResources/cave.png", "cave", false);
+        ImagePanel cave = new ImagePanel(
+                "/ChooseMapResources/cave.png", "cave");
         cave.setBounds(marginX + imageW + gap, marginTop, imageW, imageH);
 
-        ImagePanel ocean = new ImagePanel("/ChooseMapResources/ocean.png", "ocean", false);
+        ImagePanel ocean = new ImagePanel(
+                "/ChooseMapResources/ocean.png", "ocean");
         ocean.setBounds(marginX, marginTop + imageH + gap, imageW, imageH);
 
-        ImagePanel lava = new ImagePanel("/ChooseMapResources/lava.png", "lava", false);
-        lava.setBounds(marginX + imageW + gap, marginTop + imageH + gap, imageW, imageH);
+        ImagePanel lava = new ImagePanel(
+                "/ChooseMapResources/lava.png", "lava");
+        lava.setBounds(marginX + imageW + gap,
+                marginTop + imageH + gap, imageW, imageH);
 
         mapPanels.add(grass);
         mapPanels.add(cave);
         mapPanels.add(ocean);
         mapPanels.add(lava);
 
-
         for (ImagePanel panel : mapPanels) {
             content.add(panel);
+
             panel.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -89,7 +98,6 @@ public class ChooseMap extends JFrame {
                         panel.setBounds(panel.getOriginalBounds());
                         panel.setEnlarged(false);
                     } else {
-
                         for (ImagePanel p : mapPanels) {
                             if (p.isEnlarged()) {
                                 p.setBounds(p.getOriginalBounds());
@@ -114,6 +122,7 @@ public class ChooseMap extends JFrame {
             });
         }
 
+        /* ================= CHOOSE BUTTON ================= */
         JButton chooseButton = new JButton("Choose");
         chooseButton.setBackground(Color.RED);
         chooseButton.setForeground(Color.WHITE);
@@ -130,20 +139,38 @@ public class ChooseMap extends JFrame {
                 }
             }
 
-            if (selected != null) {
-                System.out.println(selected.getName());
-                dispose();
-                // Insert code here to run after choosing a map
+            if (selected == null) {
+                JOptionPane.showMessageDialog(
+                        this, "Please select a map!");
+                return;
+            }
 
+            dispose();
 
-
-
-
-
-            } else {
-                System.out.println("No map selected!");
+            switch (selected.getName()) {
+                case "grass" -> StageManager.stageSelector(1);
+                case "cave"  -> StageManager.stageSelector(2);
+                case "ocean" -> StageManager.stageSelector(3);
+                case "lava"  -> StageManager.stageSelector(4);
             }
         });
+
+        /* ================= APPLY UNLOCK STATES ================= */
+        updateMapsFromStageManager();
+
+        setVisible(true);
+    }
+
+    /* ================= UNLOCK SYNC ================= */
+    private void updateMapsFromStageManager() {
+        for (ImagePanel panel : mapPanels) {
+            switch (panel.getName()) {
+                case "grass" -> panel.setUnlocked(StageManager.stage1.isUnlocked);
+                case "cave"  -> panel.setUnlocked(StageManager.stage2.isUnlocked);
+                case "ocean" -> panel.setUnlocked(StageManager.stage3.isUnlocked);
+                case "lava"  -> panel.setUnlocked(StageManager.stage4.isUnlocked);
+            }
+        }
     }
 
     private void selectPanel(ImagePanel selectedPanel) {
@@ -151,24 +178,20 @@ public class ChooseMap extends JFrame {
             panel.setSelected(panel == selectedPanel);
         }
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ChooseMap chooseMap = new ChooseMap();
-            chooseMap.setVisible(true);
-
-            GameProgress progress = new GameProgress(chooseMap);
-            progress.updateMaps();
-        });
-    }
 }
 
+/* ================= BACKGROUND PANEL ================= */
 class BackgroundPanel extends JPanel {
+
     private BufferedImage background;
 
     public BackgroundPanel(String resourcePath) {
-        try { background = ImageIO.read(Objects.requireNonNull(getClass().getResource(resourcePath))); }
-        catch (Exception e) { e.printStackTrace(); }
+        try {
+            background = ImageIO.read(
+                    Objects.requireNonNull(getClass().getResource(resourcePath)));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         setLayout(null);
     }
 
@@ -176,7 +199,8 @@ class BackgroundPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (background != null) {
-            g.drawImage(background, 0, 0, getWidth(), getHeight(), null);
+            g.drawImage(background, 0, 0,
+                    getWidth(), getHeight(), null);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setColor(new Color(0, 0, 0, 230));
             g2.fillRect(0, 0, getWidth(), getHeight());
@@ -185,7 +209,7 @@ class BackgroundPanel extends JPanel {
     }
 }
 
-
+/* ================= IMAGE PANEL ================= */
 class ImagePanel extends JPanel {
 
     private BufferedImage image;
@@ -195,27 +219,40 @@ class ImagePanel extends JPanel {
     private final String name;
     private Rectangle originalBounds;
 
-    public ImagePanel(String resourcePath, String name, boolean isUnlocked) {
+    public ImagePanel(String resourcePath, String name) {
         this.name = name;
-        this.isUnlocked = isUnlocked;
         try {
-            image = ImageIO.read(Objects.requireNonNull(getClass().getResource(resourcePath)));
+            image = ImageIO.read(
+                    Objects.requireNonNull(getClass().getResource(resourcePath)));
             setOpaque(false);
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean isUnlocked() { return isUnlocked; }
-    public void setUnlocked(boolean unlocked) { this.isUnlocked = unlocked; repaint(); }
+    public void setUnlocked(boolean unlocked) {
+        this.isUnlocked = unlocked;
+        repaint();
+    }
 
     public boolean isSelected() { return selected; }
-    public void setSelected(boolean selected) { if (isUnlocked) { this.selected = selected; repaint(); } }
+    public void setSelected(boolean selected) {
+        if (isUnlocked) {
+            this.selected = selected;
+            repaint();
+        }
+    }
 
     public String getName() { return name; }
 
     public boolean isEnlarged() { return isEnlarged; }
     public void setEnlarged(boolean enlarged) { this.isEnlarged = enlarged; }
 
-    public void setOriginalBounds(Rectangle bounds) { this.originalBounds = bounds; }
+    public void setOriginalBounds(Rectangle bounds) {
+        this.originalBounds = bounds;
+    }
+
     public Rectangle getOriginalBounds() { return originalBounds; }
 
     @Override
@@ -225,12 +262,18 @@ class ImagePanel extends JPanel {
 
         int pw = getWidth();
         int ph = getHeight();
+
         double imgAspect = (double) image.getWidth() / image.getHeight();
         double panelAspect = (double) pw / ph;
 
         int dw, dh;
-        if (imgAspect > panelAspect) { dw = pw; dh = (int) (pw / imgAspect); }
-        else { dh = ph; dw = (int) (ph * imgAspect); }
+        if (imgAspect > panelAspect) {
+            dw = pw;
+            dh = (int) (pw / imgAspect);
+        } else {
+            dh = ph;
+            dw = (int) (ph * imgAspect);
+        }
 
         int x = (pw - dw) / 2;
         int y = (ph - dh) / 2;
@@ -250,34 +293,13 @@ class ImagePanel extends JPanel {
             g2.setFont(new Font("Arial", Font.BOLD, 36));
             FontMetrics fm = g2.getFontMetrics();
             String lockedText = "Locked";
-            int textWidth = fm.stringWidth(lockedText);
-            int textHeight = fm.getAscent();
-            g2.drawString(lockedText, x + (dw - textWidth) / 2, y + (dh + textHeight) / 2);
+            g2.drawString(
+                    lockedText,
+                    x + (dw - fm.stringWidth(lockedText)) / 2,
+                    y + (dh + fm.getAscent()) / 2
+            );
         }
 
         g2.dispose();
-    }
-}
-
-class GameProgress {
-
-    private final ChooseMap chooseMap;
-
-    public boolean grassUnlocked = true;
-    public boolean caveUnlocked = false;
-    public boolean oceanUnlocked = false;
-    public boolean lavaUnlocked = false;
-
-    public GameProgress(ChooseMap mapScreen) { this.chooseMap = mapScreen; }
-
-    public void updateMaps() {
-        for (ImagePanel panel : chooseMap.getMapPanels()) {
-            switch (panel.getName()) {
-                case "grass": panel.setUnlocked(grassUnlocked); break;
-                case "cave": panel.setUnlocked(caveUnlocked); break;
-                case "ocean": panel.setUnlocked(oceanUnlocked); break;
-                case "lava": panel.setUnlocked(lavaUnlocked); break;
-            }
-        }
     }
 }

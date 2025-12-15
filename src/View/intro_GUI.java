@@ -213,6 +213,7 @@ public class intro_GUI {
                 }
                 setLayout(null);
 
+                // Back button
                 ImageIcon back = new ImageIcon("assets/images/bck t menu.png");
                 Image back1 = back.getImage();
                 Image back2 = back1.getScaledInstance(200, 50, Image.SCALE_SMOOTH);
@@ -222,8 +223,83 @@ public class intro_GUI {
                 backBtn.setFocusPainted(false);
                 backBtn.setOpaque(false);
                 backBtn.addActionListener(e -> frame.showPanel("Screen"));
-
                 add(backBtn);
+
+                // Read leaderboard file and build table model
+                java.util.List<String[]> entries = new java.util.ArrayList<>();
+                File lbFile = new File("saves/leaderboards.txt");
+                if (lbFile.exists()) {
+                    try (java.io.BufferedReader br = new java.io.BufferedReader(new java.io.FileReader(lbFile))) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            line = line.trim();
+                            if (line.isEmpty()) continue;
+                            String[] parts = line.split("\\|");
+                            String name = parts.length > 0 ? parts[0] : "";
+                            long score = 0;
+                            // heuristic: if there are at least 3 parts, use index 2 as score (file seems to store score there),
+                            // otherwise fallback to index 1
+                            if (parts.length >= 3) {
+                                try { score = Long.parseLong(parts[2]); } catch (Exception ex) { try { score = Long.parseLong(parts[1]); } catch (Exception ex2) { score = 0; } }
+                            } else if (parts.length >= 2) {
+                                try { score = Long.parseLong(parts[1]); } catch (Exception ex) { score = 0; }
+                            }
+                            entries.add(new String[] { name, Long.toString(score) });
+                        }
+                    } catch (IOException ex) {
+                        System.out.println("Error reading leaderboards: " + ex.getMessage());
+                    }
+                }
+
+                // sort by score desc
+                entries.sort((a, b) -> {
+                    long sa = 0, sb = 0;
+                    try { sa = Long.parseLong(a[1]); } catch (Exception e) {}
+                    try { sb = Long.parseLong(b[1]); } catch (Exception e) {}
+                    return Long.compare(sb, sa);
+                });
+
+                // build table data (rank, name, score)
+                Object[][] data = new Object[entries.size()][3];
+                for (int i = 0; i < entries.size(); i++) {
+                    data[i][0] = i + 1; // rank
+                    data[i][1] = entries.get(i)[0]; // name
+                    data[i][2] = entries.get(i)[1]; // score
+                }
+
+                String[] cols = new String[] { "Rank", "Name", "Score" };
+                javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(data, cols) {
+                    @Override
+                    public boolean isCellEditable(int row, int column) { return false; }
+                };
+
+                JTable table = new JTable(model);
+                table.setFont(new Font("Tahoma", Font.PLAIN, 18));
+                table.setRowHeight(36);
+                table.getColumnModel().getColumn(0).setPreferredWidth(60);
+                table.getColumnModel().getColumn(1).setPreferredWidth(600);
+                table.getColumnModel().getColumn(2).setPreferredWidth(120);
+                table.setFillsViewportHeight(true);
+
+                // center align rank and score
+                javax.swing.table.DefaultTableCellRenderer centerRenderer = new javax.swing.table.DefaultTableCellRenderer();
+                centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+                table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
+                table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+
+                // Put table into a scroll pane so long lists can be scrolled
+                JScrollPane sp = new JScrollPane(table);
+                sp.setBounds(200, 120, 880, 480);
+                sp.setOpaque(false);
+                sp.getViewport().setOpaque(false);
+                sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+                sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+                // Make sure the table's preferred viewport size reflects its rows
+                int tableHeight = Math.max(480, entries.size() * table.getRowHeight());
+                table.setPreferredScrollableViewportSize(new Dimension(860, tableHeight));
+
+                add(sp);
 
             }
             public void paintComponent(Graphics g) {

@@ -161,7 +161,7 @@ public class intro_GUI {
                         Class<?> mainClass = Class.forName("Main");
                         mainClass.getMethod("continueGame").invoke(null);
 
-                        dispose();
+                        
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(
                             null, 

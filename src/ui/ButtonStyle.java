@@ -5,7 +5,6 @@ import java.awt.*;
 import java.io.InputStream;
 import javax.swing.*;
 
-// Simple helper class for button style - matches Ending.java
 public class ButtonStyle {
     private static Font eightBitFont;
     
@@ -26,14 +25,12 @@ public class ButtonStyle {
         }
     }
     
-    // Create a button with the standard style
     public static JButton createButton(String text) {
         JButton b = new JButton(text);
         b.setBackground(new Color(0xD32F2F));
         b.setForeground(Color.WHITE);
         b.setFocusPainted(false);
         b.setFont(eightBitFont.deriveFont(14f));
-        // Add simple hover effect: brighten background on hover
         b.addMouseListener(new java.awt.event.MouseAdapter() {
             Color original = b.getBackground();
             @Override
@@ -46,18 +43,15 @@ public class ButtonStyle {
             }
             @Override
             public void mousePressed(java.awt.event.MouseEvent e) {
-                // play click sound effect (non-blocking)
                 try {
                     MusicPlayer.playOnce("/Music/assets_audio_sfx_select.wav");
                 } catch (Exception ex) {
-                    // ignore sound errors to avoid breaking UI
                 }
             }
         });
         return b;
     }
     
-    // Get the font for custom use
     public static Font getFont() {
         return eightBitFont;
     }

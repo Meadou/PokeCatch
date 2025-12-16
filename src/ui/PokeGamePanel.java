@@ -257,14 +257,12 @@ public class PokeGamePanel extends JFrame {
             button.addActionListener(e -> {
                 ImageIcon icon = (ImageIcon) button.getIcon();
                 if (icon != null) {
-                    // Convert image to white silhouette
                     Image img = icon.getImage();
                     Image whiteImg = createWhiteSilhouette(img, button.getWidth(), button.getHeight());
                     button.setIcon(new ImageIcon(whiteImg));
                     
                 }
 
-                // Disable the button so it can't be clicked again
                 button.setEnabled(false);
 
                 Timer effectTimer = new Timer(300, ev -> {
@@ -276,7 +274,6 @@ public class PokeGamePanel extends JFrame {
                 effectTimer.start();
 
 
-                // Add caught Pokémon & update score
                 gameState.addCaughtPokemon(pokemon);
                 gameState.addScore(100);
                 scoreLabel.setText("Score: " + gameState.getGlobalScore());
@@ -317,12 +314,10 @@ public class PokeGamePanel extends JFrame {
     }
 
     private void endGame() {
-    // stop stage music on game over
     try {
         if (stageMusic != null) stageMusic.stop();
     } catch (Exception ignored) {}
     
-    // Stop timers
     if (gameTimer != null) gameTimer.stop();
     if (spawnTimer != null) spawnTimer.stop();
     for (Timer t : despawnTimers) t.stop();
@@ -333,14 +328,11 @@ public class PokeGamePanel extends JFrame {
         }
     }
     
-    // Transfer caught Pokémon to Pokédex before game over
     gameState.transferCaughtPokemonToBST();
     
-    // Save to leaderboards and delete current save
     try {
         Model.PlayerData currentPlayer = PlayerDataManager.getCurrentPlayerData();
         if (currentPlayer != null && currentPlayer.playerName != null && !currentPlayer.playerName.isEmpty()) {
-            // Sync current game state to player data (updates score and caught pokemon)
             PlayerDataManager.syncFromGameState(
                 gameState, 
                 currentPlayer.playerName,
@@ -461,7 +453,7 @@ public class PokeGamePanel extends JFrame {
         if (name.equals("grass")) return 2;
         if (name.equals("cave")) return 3;
         if (name.equals("ocean")) return 4;
-        if (name.equals("lava")) return 4;  // lava is final stage, but return 4 for safety
+        if (name.equals("lava")) return 4;  
         return 1;
     }
 

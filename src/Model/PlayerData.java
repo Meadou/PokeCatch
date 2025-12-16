@@ -8,7 +8,7 @@ public class PlayerData {
     public int starterPokemonId;
     public int currentStage;
     public List<Integer> unlockedStages;
-    public List<Integer> caughtPokemonIds; // List of unique pokemon IDs caught
+    public List<Integer> caughtPokemonIds; 
     public int score;
 
     public PlayerData() {

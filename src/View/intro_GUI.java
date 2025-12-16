@@ -37,11 +37,9 @@ public class intro_GUI {
             setDefaultCloseOperation(EXIT_ON_CLOSE);
             setLocationRelativeTo(null);
             setResizable(false);
-            // start menu music
             menuMusic = new MusicPlayer();
             menuMusic.playLoop("/Music/title_screen.wav");
 
-            // ensure music stops when window closes
             addWindowListener(new java.awt.event.WindowAdapter() {
                 @Override
                 public void windowClosing(java.awt.event.WindowEvent e) {
@@ -70,7 +68,6 @@ public class intro_GUI {
                 }
                 setLayout(new BorderLayout());
 
-                // bottom panel with centered buttons anchored to bottom
                 JPanel bottom = new JPanel();
                 bottom.setOpaque(false);
                 bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
@@ -123,7 +120,6 @@ public class intro_GUI {
                 }
                 setLayout(new BorderLayout());
 
-                // bottom area with vertical buttons
                 JPanel bottom = new JPanel();
                 bottom.setOpaque(false);
                 bottom.setLayout(new BoxLayout(bottom, BoxLayout.Y_AXIS));
@@ -142,7 +138,6 @@ public class intro_GUI {
                         Class<?> mainClass = Class.forName("Main");
                         mainClass.getMethod("startNewGame", java.awt.Frame.class).invoke(null, frame);
                     } catch (NoSuchMethodException nsme) {
-                        // fallback to parameterless startNewGame
                         try {
                             Class<?> mainClass = Class.forName("Main");
                             mainClass.getMethod("startNewGame").invoke(null);
@@ -212,7 +207,6 @@ public class intro_GUI {
                 }
                 setLayout(null);
 
-                // Back button
                 ImageIcon back = new ImageIcon("assets/images/bck t menu.png");
                 Image back1 = back.getImage();
                 Image back2 = back1.getScaledInstance(200, 50, Image.SCALE_SMOOTH);
@@ -224,7 +218,6 @@ public class intro_GUI {
                 backBtn.addActionListener(e -> frame.showPanel("Screen"));
                 add(backBtn);
 
-                // Read leaderboard file and build table model
                 java.util.List<String[]> entries = new java.util.ArrayList<>();
                 File lbFile = new File("saves/leaderboards.txt");
                 if (lbFile.exists()) {
@@ -236,8 +229,6 @@ public class intro_GUI {
                             String[] parts = line.split("\\|");
                             String name = parts.length > 0 ? parts[0] : "";
                             long score = 0;
-                            // heuristic: if there are at least 3 parts, use index 2 as score (file seems to store score there),
-                            // otherwise fallback to index 1
                             if (parts.length >= 3) {
                                 try { score = Long.parseLong(parts[2]); } catch (Exception ex) { try { score = Long.parseLong(parts[1]); } catch (Exception ex2) { score = 0; } }
                             } else if (parts.length >= 2) {
@@ -250,7 +241,6 @@ public class intro_GUI {
                     }
                 }
 
-                // sort by score desc
                 entries.sort((a, b) -> {
                     long sa = 0, sb = 0;
                     try { sa = Long.parseLong(a[1]); } catch (Exception e) {}
@@ -258,12 +248,11 @@ public class intro_GUI {
                     return Long.compare(sb, sa);
                 });
 
-                // build table data (rank, name, score)
                 Object[][] data = new Object[entries.size()][3];
                 for (int i = 0; i < entries.size(); i++) {
-                    data[i][0] = i + 1; // rank
-                    data[i][1] = entries.get(i)[0]; // name
-                    data[i][2] = entries.get(i)[1]; // score
+                    data[i][0] = i + 1; 
+                    data[i][1] = entries.get(i)[0]; 
+                    data[i][2] = entries.get(i)[1]; 
                 }
 
                 String[] cols = new String[] { "Rank", "Name", "Score" };
@@ -280,13 +269,11 @@ public class intro_GUI {
                 table.getColumnModel().getColumn(2).setPreferredWidth(120);
                 table.setFillsViewportHeight(true);
 
-                // center align rank and score
                 javax.swing.table.DefaultTableCellRenderer centerRenderer = new javax.swing.table.DefaultTableCellRenderer();
                 centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
                 table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
                 table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
 
-                // Put table into a scroll pane so long lists can be scrolled
                 JScrollPane sp = new JScrollPane(table);
                 sp.setBounds(200, 120, 880, 480);
                 sp.setOpaque(false);
@@ -294,7 +281,6 @@ public class intro_GUI {
                 sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
                 sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-                // Make sure the table's preferred viewport size reflects its rows
                 int tableHeight = Math.max(480, entries.size() * table.getRowHeight());
                 table.setPreferredScrollableViewportSize(new Dimension(860, tableHeight));
 

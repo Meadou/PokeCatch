@@ -69,8 +69,6 @@ public class PokemonBST {
         } else if (id > node.pokemon.pokemonID) {
             node.right = deleteRecursive(node.right, id);
         } else {
-            // found node to delete
-            // if duplicates > 1, just decrement
             if (node.pokemon.getDuplicates() > 1) {
                 node.pokemon.decrementDuplicates();
                 return node;
@@ -78,11 +76,9 @@ public class PokemonBST {
 
             size--;
 
-            // node with only one child or no child
             if (node.left == null) return node.right;
             if (node.right == null) return node.left;
 
-            // node with two children: get inorder successor (smallest in right)
             PokeTreeNode successor = findMin(node.right);
             node.pokemon = successor.pokemon;
             node.right = deleteRecursive(node.right, successor.pokemon.pokemonID);
@@ -109,29 +105,24 @@ public class PokemonBST {
         inOrderRecursive(node.right, out);
     }
 
-    // helper to print tree contents
     public void printInOrder() {
         for (Pokemon p : inOrder()) {
             System.out.println(p.pokemonID + ": " + p.getName() + " (dup=" + p.getDuplicates() + ")");
         }
     }
 
-    // expose root for visualization
     public PokeTreeNode getRoot() {
         return root;
     }
 
-    // Balance the tree using median-insertion method
     public void balance() {
         if (root == null) return;
 
         List<Pokemon> sortedList = inOrder();
 
-        // Clear the tree
         root = null;
         size = 0;
 
-        // Rebuild balanced
         buildBalanced(sortedList, 0, sortedList.size() - 1);
     }
 
@@ -143,7 +134,6 @@ public class PokemonBST {
         buildBalanced(list, mid + 1, end);
     }
 
-    // Filter tree by Pokemon type
     public PokemonBST filterByType(String type) {
         if (type.equals("All")) {
             return this;
@@ -153,7 +143,6 @@ public class PokemonBST {
         List<Pokemon> allPokemon = inOrder();
         
         for (Pokemon p : allPokemon) {
-            // Check if type matches (check both type and type2)
             if ((p.type != null && p.type.toString().equals(type)) || 
                 (p.type2 != null && p.type2.toString().equals(type))) {
                 filtered.insert(p);

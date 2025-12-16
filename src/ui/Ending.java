@@ -13,7 +13,7 @@ import javax.swing.*;
 
 public class Ending extends JPanel implements ActionListener {
     private final GameState gameState;
-    private final JFrame parentFrame; // Add parent frame reference
+    private final JFrame parentFrame;
 
     private float titleAlpha = 0f;
     private float titleScale = 0.9f;
@@ -28,7 +28,6 @@ public class Ending extends JPanel implements ActionListener {
     private final JButton menuButton;
     private Font eightBit;
 
-    // Updated constructor with parent frame
     public Ending(GameState gameState, JFrame parentFrame) {
         this.gameState = gameState;
         this.parentFrame = parentFrame;
@@ -46,7 +45,6 @@ public class Ending extends JPanel implements ActionListener {
         add(statsButton);
         add(menuButton);
 
-        // Add action listener for stats button
         statsButton.addActionListener(e -> showPlayerStats());
         menuButton.addActionListener(e -> backToMenu());
 
@@ -54,11 +52,9 @@ public class Ending extends JPanel implements ActionListener {
         timer.start();
     }
 
-    // Method to show player stats
     private void showPlayerStats() {
         if (parentFrame == null) return;
 
-        // Load player data via FileHandler
         PlayerData playerData = FileHandler.loadPlayerData();
         if (playerData == null) {
             playerData = new PlayerData();
@@ -67,18 +63,15 @@ public class Ending extends JPanel implements ActionListener {
             playerData.currentStage = 0;
         }
 
-        // Build stats panel dynamically
         JPanel statsPanel = new JPanel(new BorderLayout());
         statsPanel.setBackground(new Color(0x1a1a2e));
 
-        // Title
         JLabel title = new JLabel("PLAYER STATS", SwingConstants.CENTER);
         title.setFont(eightBit.deriveFont(Font.BOLD, 48f));
         title.setForeground(new Color(0x00d4ff));
         title.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
         statsPanel.add(title, BorderLayout.NORTH);
 
-        // Center listing
         JPanel center = new JPanel();
         center.setOpaque(false);
         center.setLayout(new GridBagLayout());
@@ -105,7 +98,6 @@ public class Ending extends JPanel implements ActionListener {
         scroll.setBorder(null);
         statsPanel.add(scroll, BorderLayout.CENTER);
 
-        // Back button
         JButton back = makeButton("BACK");
         back.addActionListener(e -> {
             parentFrame.setContentPane(this);
@@ -123,7 +115,6 @@ public class Ending extends JPanel implements ActionListener {
         parentFrame.repaint();
     }
 
-    // Helper to add a label/value row into the grid
     private void addStatRow(JPanel panel, GridBagConstraints c, String label, String value, Font labelFont, Font valueFont) {
         JLabel l = new JLabel(label);
         l.setFont(labelFont);
@@ -150,45 +141,37 @@ public class Ending extends JPanel implements ActionListener {
         }
     }
 
-    // Method to go back to menu
     private void backToMenu() {
         if (parentFrame == null) return;
 
         try {
-            // Ensure current player data exists and is synced from game state
             Model.PlayerData current = PlayerDataManager.getCurrentPlayerData();
             if (current == null) {
-                // Try loading from save file
                 current = FileHandler.loadPlayerData();
                 if (current != null) {
                     PlayerDataManager.setCurrentPlayerData(current);
                 }
             }
 
-            // Sync latest game state into player data (preserves name/starter if present)
             if (PlayerDataManager.getCurrentPlayerData() != null) {
                 PlayerDataManager.syncFromGameState(gameState, PlayerDataManager.getCurrentPlayerData().playerName, PlayerDataManager.getCurrentPlayerData().starterPokemonId);
             } else {
-                // Ensure at least a PlayerData exists to save
                 PlayerData p = FileHandler.loadPlayerData();
                 if (p == null) p = new PlayerData();
                 PlayerDataManager.setCurrentPlayerData(p);
                 PlayerDataManager.syncFromGameState(gameState, p.playerName, p.starterPokemonId);
             }
 
-            // Save to leaderboards
             FileHandler.saveToLeaderboards(PlayerDataManager.getCurrentPlayerData());
 
         } catch (Exception ex) {
             System.err.println("Error saving to leaderboards: " + ex.getMessage());
         }
 
-        // Close ending frame and open main menu
         try {
             parentFrame.dispose();
         } catch (Exception ignore) {}
 
-        // Launch a fresh main menu frame
         try {
             new intro_GUI.MainFrame();
         } catch (Exception ex) {

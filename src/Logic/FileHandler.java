@@ -11,7 +11,6 @@ public class FileHandler {
     private static final String PLAYER_SAVE_FILE = SAVES_DIR + "/player_save.txt";
     private static final String LEADERBOARDS_FILE = SAVES_DIR + "/leaderboards.txt";
 
-    // Ensure saves directory exists
     private static void ensureSavesDirectory() {
         File dir = new File(SAVES_DIR);
         if (!dir.exists()) {
@@ -19,7 +18,6 @@ public class FileHandler {
         }
     }
 
-    // Save current player progress
     public static void savePlayerData(PlayerData playerData) {
         ensureSavesDirectory();
         
@@ -28,7 +26,6 @@ public class FileHandler {
             writer.println("STARTER_ID:" + playerData.starterPokemonId);
             writer.println("CURRENT_STAGE:" + playerData.currentStage);
             
-            // Write unlocked stages
             writer.print("UNLOCKED_STAGES:");
             for (int i = 0; i < playerData.unlockedStages.size(); i++) {
                 writer.print(playerData.unlockedStages.get(i));
@@ -38,7 +35,6 @@ public class FileHandler {
             }
             writer.println();
             
-            // Write caught pokemon IDs
             writer.print("CAUGHT_POKEMON:");
             for (int i = 0; i < playerData.caughtPokemonIds.size(); i++) {
                 writer.print(playerData.caughtPokemonIds.get(i));
@@ -49,19 +45,20 @@ public class FileHandler {
             writer.println();
             
             writer.println("SCORE:" + playerData.score);
+
+            System.out.println("Player data saved.");
             
         } catch (IOException e) {
             System.err.println("Error saving player data: " + e.getMessage());
         }
     }
 
-    // Load current player progress
     public static PlayerData loadPlayerData() {
         ensureSavesDirectory();
         File file = new File(PLAYER_SAVE_FILE);
         
         if (!file.exists()) {
-            return null; // No save file exists
+            return null; 
         }
 
         try (Scanner scanner = new Scanner(file)) {
@@ -122,14 +119,10 @@ public class FileHandler {
         }
     }
 
-    // Save to leaderboards (append mode)
     public static void saveToLeaderboards(PlayerData playerData) {
         ensureSavesDirectory();
         
-        // Use playerData.score (already set from GameState) for leaderboards
-        
         try (PrintWriter writer = new PrintWriter(new FileWriter(LEADERBOARDS_FILE, true))) {
-            // Format: NAME|STARTER_ID|SCORE|UNIQUE_POKEMON|STAGES_COMPLETED
             int uniquePokemon = playerData.caughtPokemonIds.size();
             int stagesCompleted = playerData.unlockedStages.size();
             
@@ -138,13 +131,14 @@ public class FileHandler {
                           playerData.score + "|" + 
                           uniquePokemon + "|" + 
                           stagesCompleted);
+
+        System.out.println("Leaderboards updated.");
             
         } catch (IOException e) {
             System.err.println("Error saving to leaderboards: " + e.getMessage());
         }
     }
 
-    // Load leaderboards
     public static List<LeaderboardEntry> loadLeaderboards() {
         ensureSavesDirectory();
         File file = new File(LEADERBOARDS_FILE);
@@ -152,7 +146,7 @@ public class FileHandler {
         List<LeaderboardEntry> entries = new ArrayList<>();
         
         if (!file.exists()) {
-            return entries; // Return empty list if no leaderboards file
+            return entries;
         }
 
         try (Scanner scanner = new Scanner(file)) {
@@ -172,7 +166,6 @@ public class FileHandler {
                 }
             }
             
-            // Sort by score (descending)
             entries.sort((a, b) -> Integer.compare(b.score, a.score));
             
         } catch (FileNotFoundException e) {
@@ -184,7 +177,6 @@ public class FileHandler {
         return entries;
     }
 
-    // Helper class for leaderboard entries
     public static class LeaderboardEntry {
         public String name;
         public int starterId;
@@ -197,6 +189,7 @@ public class FileHandler {
         File file = new File(PLAYER_SAVE_FILE);
         if (file.exists()) {
             file.delete();
+            System.out.println("Save file deleted.");
         }
     }
 }

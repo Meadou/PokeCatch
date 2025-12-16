@@ -1,4 +1,5 @@
 package ui;
+import Logic.FileHandler;
 import Logic.GameState;
 import Logic.Logic;
 import Logic.PlayerDataManager;
@@ -8,9 +9,7 @@ import Music.MusicPlayer;
 import View.EndingFrame;
 import View.Loading_Screen;
 import View.PokedexFrame;
-import View.intro_GUI;
 import View.intro_GUI.MainFrame;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -91,7 +90,6 @@ public class PokeGamePanel extends JFrame {
         bgPanel.add(scoreLabel);
 
 
-        //spawner(stage.stagePokemon);
 
         try {
             stageMusic = new Music.MusicPlayer();
@@ -108,7 +106,6 @@ public class PokeGamePanel extends JFrame {
                 endStage(stage); 
             }
         });
-        //gameTimer.start();
 
 
         startCountdown(stage);
@@ -173,12 +170,10 @@ public class PokeGamePanel extends JFrame {
             gameTimer.stop();
             if (spawnTimer != null) spawnTimer.stop();
 
-            // Freeze all despawn timers
             for (Timer t : despawnTimers) {
                 t.stop();
             }
 
-            // Disable all active buttons
             for (JButton btn : activeButtons) {
                 btn.setEnabled(false);
             }
@@ -196,12 +191,10 @@ public class PokeGamePanel extends JFrame {
             gameTimer.start();
             if (spawnTimer != null) spawnTimer.start();
 
-            // Resume despawn timers
             for (Timer t : despawnTimers) {
                 t.start();
             }
 
-            // Enable buttons again
             for (JButton btn : activeButtons) {
                 btn.setEnabled(true);
             }
@@ -264,14 +257,12 @@ public class PokeGamePanel extends JFrame {
             button.addActionListener(e -> {
                 ImageIcon icon = (ImageIcon) button.getIcon();
                 if (icon != null) {
-                    // Convert image to white silhouette
                     Image img = icon.getImage();
                     Image whiteImg = createWhiteSilhouette(img, button.getWidth(), button.getHeight());
                     button.setIcon(new ImageIcon(whiteImg));
                     
                 }
 
-                // Disable the button so it can't be clicked again
                 button.setEnabled(false);
 
                 Timer effectTimer = new Timer(300, ev -> {
@@ -283,7 +274,6 @@ public class PokeGamePanel extends JFrame {
                 effectTimer.start();
 
 
-                // Add caught Pokémon & update score
                 gameState.addCaughtPokemon(pokemon);
                 gameState.addScore(100);
                 scoreLabel.setText("Score: " + gameState.getGlobalScore());
@@ -324,40 +314,60 @@ public class PokeGamePanel extends JFrame {
     }
 
     private void endGame() {
-        // stop stage music on game over
-        try {
-            if (stageMusic != null) stageMusic.stop();
-        } catch (Exception ignored) {}
-        for (Component comp : this.getContentPane().getComponents()) {
-            if (comp instanceof JButton) {
-                comp.setEnabled(false);
-            }
+    try {
+        if (stageMusic != null) stageMusic.stop();
+    } catch (Exception ignored) {}
+    
+    if (gameTimer != null) gameTimer.stop();
+    if (spawnTimer != null) spawnTimer.stop();
+    for (Timer t : despawnTimers) t.stop();
+    
+    for (Component comp : this.getContentPane().getComponents()) {
+        if (comp instanceof JButton) {
+            comp.setEnabled(false);
         }
-        try {
-            MusicPlayer.playOnce("/Music/GameOver.wav");
-        } catch (Exception ignored) {}
-
-        // Show custom game over screen instead of JOptionPane
-        SwingUtilities.invokeLater(() -> {
-            new View.GameOverFrame();
-        });
-        GameState.setCurrenStage(null);
-        this.dispose();
     }
+    
+    gameState.transferCaughtPokemonToBST();
+    
+    try {
+        Model.PlayerData currentPlayer = PlayerDataManager.getCurrentPlayerData();
+        if (currentPlayer != null && currentPlayer.playerName != null && !currentPlayer.playerName.isEmpty()) {
+            PlayerDataManager.syncFromGameState(
+                gameState, 
+                currentPlayer.playerName,
+                currentPlayer.starterPokemonId
+            );
+            
+            FileHandler.saveToLeaderboards(currentPlayer);
+            
+            FileHandler.deleteSaveFile();
+        }
+    } catch (Exception ex) {
+        System.err.println("Error saving to leaderboards on game over: " + ex.getMessage());
+    }
+    
+    try {
+        MusicPlayer.playOnce("/Music/GameOver.wav");
+    } catch (Exception ignored) {}
+
+    SwingUtilities.invokeLater(() -> {
+        new View.GameOverFrame();
+    });
+    GameState.setCurrenStage(null);
+    this.dispose();
+}
 
    private void endStage(Stage currStage) {
 
-        // Stop music
         try {
             if (stageMusic != null) stageMusic.stop();
         } catch (Exception ignored) {}
 
-        // Stop timers
         if (gameTimer != null) gameTimer.stop();
         if (spawnTimer != null) spawnTimer.stop();
         for (Timer t : despawnTimers) t.stop();
 
-        // Disable gameplay buttons
         for (Component comp : this.getContentPane().getComponents()) {
             if (comp instanceof JButton && comp != pauseButton && comp != resumeButton) {
                 comp.setEnabled(false);
@@ -385,12 +395,10 @@ public class PokeGamePanel extends JFrame {
         int btnY = 500;
         int spacing = 50;
 
-        // ===== NEXT / CONTINUE BUTTON =====
         nextStageBtn = ButtonStyle.createButton(isFinalStage ? "CONTINUE" : "NEXT STAGE");
         nextStageBtn.setBounds(centerX - btnWidth - 10, btnY, btnWidth, btnHeight);
         nextStageBtn.addActionListener(e -> {
             stageCompleted = true;
-            // Save progress and unlock next stage
             try {
                 int next = getNextStageNumber(currStage);
                 PlayerDataManager.saveProgress(gameState, next);
@@ -411,7 +419,6 @@ public class PokeGamePanel extends JFrame {
         });
         this.getContentPane().add(nextStageBtn);
 
-        // ===== POKEDEX BUTTON =====
         pokedexBtn = ButtonStyle.createButton("OPEN POKEDEX");
         pokedexBtn.setBounds(centerX - btnWidth / 2, btnY + spacing, btnWidth, btnHeight);
         pokedexBtn.addActionListener(e -> {
@@ -420,12 +427,10 @@ public class PokeGamePanel extends JFrame {
         });
         this.getContentPane().add(pokedexBtn);
 
-        // ===== EXIT BUTTON =====
         exitBtn = ButtonStyle.createButton("EXIT");
         exitBtn.setBounds(centerX + 10, btnY, btnWidth, btnHeight);
         exitBtn.addActionListener(e -> {
             stageCompleted = true;
-            // Save progress before exiting
             try {
                 int next = getNextStageNumber(currStage);
                 PlayerDataManager.saveProgress(gameState, next);
@@ -448,7 +453,7 @@ public class PokeGamePanel extends JFrame {
         if (name.equals("grass")) return 2;
         if (name.equals("cave")) return 3;
         if (name.equals("ocean")) return 4;
-        if (name.equals("lava")) return 4;  // lava is final stage, but return 4 for safety
+        if (name.equals("lava")) return 4;  
         return 1;
     }
 
@@ -457,13 +462,11 @@ public class PokeGamePanel extends JFrame {
         repaint();
     }
 
-    // Show loading screen on this frame (similar to Intro.showLoadingScreenOnFrame)
     public void showLoadingScreenOnFrame(Runnable onComplete) {
         if (this == null) return;
         
         this.getContentPane().removeAll();
         
-        // Create a black panel to hold the loading screen
         JPanel blackPanel = new JPanel(new GridBagLayout());
         blackPanel.setBackground(Color.BLACK);
         blackPanel.setOpaque(true);
@@ -480,7 +483,6 @@ public class PokeGamePanel extends JFrame {
         this.revalidate();
         this.repaint();
         
-        // Execute callback after loading screen completes
         Timer completeTimer = new Timer(2500, e -> {
             if (onComplete != null) {
                 onComplete.run();
@@ -496,7 +498,7 @@ public class PokeGamePanel extends JFrame {
             case "cave"  -> View.StageManager.stage3.isUnlocked = true;
             case "ocean" -> View.StageManager.stage4.isUnlocked = true;
             case "lava"  -> {
-                // Final stage — nothing to unlock
+                // Final stage
             }
         }
     }
@@ -540,18 +542,14 @@ public class PokeGamePanel extends JFrame {
             if (backgroundImage != null) {
                 g2d.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
             } else {
-                // Fallback background color
                 g2d.setColor(new Color(50, 50, 50));
                 g2d.fillRect(0, 0, getWidth(), getHeight());
             }
             
-            // Draw stage clear overlay if needed
             if (showStageClear) {
-                // Semi-transparent overlay
                 g2d.setColor(new Color(0, 0, 0, 200));
                 g2d.fillRect(0, 0, getWidth(), getHeight());
                 
-                // Draw message box
                 int boxWidth = 500;
                 int boxHeight = 200;
                 int boxX = (getWidth() - boxWidth) / 2;
@@ -563,7 +561,6 @@ public class PokeGamePanel extends JFrame {
                 g2d.setStroke(new BasicStroke(3));
                 g2d.drawRect(boxX, boxY, boxWidth, boxHeight);
                 
-                // Draw text
                 Font font = ButtonStyle.getFont().deriveFont(Font.BOLD, 24f);
                 g2d.setFont(font);
                 g2d.setColor(Color.WHITE);
@@ -581,11 +578,9 @@ public class PokeGamePanel extends JFrame {
 
         if (isCountdownActive) {
 
-            // Darken background
             g2d.setColor(new Color(0, 0, 0, 180));
             g2d.fillRect(0, 0, getWidth(), getHeight());
 
-            // Draw big countdown number
             g2d.setColor(Color.WHITE);
             g2d.setFont(new Font("Arial", Font.BOLD, 140));
             g2d.setRenderingHint(

@@ -40,17 +40,14 @@ public class Intro {
     }
 
     public void launchIntro() {
-        // Hardcode starter Pokemon IDs: 1 (Bulbasaur), 4 (Charmander), 7 (Squirtle)
         setStarters();
         SwingUtilities.invokeLater(this::GUI);
     }
     
-    // Set hardcoded starter Pokemon IDs
     private void setStarters() {
         Util util = new Util();
         
-        // Hardcode the three classic starters
-        int[] starterIds = {1, 4, 7}; // Bulbasaur, Charmander, Squirtle
+        int[] starterIds = {1, 4, 7};
         
         labelTexts = new String[3];
         chooseStarter = new int[3];
@@ -61,7 +58,6 @@ public class Intro {
                 labelTexts[i] = p.name.toUpperCase();
                 chooseStarter[i] = p.pokemonID;
             } else {
-                // Fallback if Pokemon not found
                 labelTexts[i] = "POKEMON " + starterIds[i];
                 chooseStarter[i] = starterIds[i];
             }
@@ -100,7 +96,6 @@ public class Intro {
             storyImages[i] = loadAndScale(Objects.requireNonNull(getClass().getResource(storyImagesArr[i])), 800, 500);
         }
 
-        // Load Pokemon images based on selected starter IDs (smaller size to prevent blurring)
         pokemonStarterImages = new BufferedImage[3];
         for (int i = 0; i < 3 && i < chooseStarter.length; i++) {
             pokemonStarterImages[i] = loadPokemonImage(chooseStarter[i], 300, 300);
@@ -211,11 +206,10 @@ public class Intro {
         prevButton.addActionListener(e -> showPreviousManual());
         nextButton.addActionListener(e -> showNextManual());
 
-        // Move buttons 40% closer to center: use BorderLayout with custom insets
         JPanel leftPanel = new JPanel();
         leftPanel.setOpaque(false);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.X_AXIS));
-        leftPanel.add(Box.createHorizontalStrut(80)); // 40% closer from edge
+        leftPanel.add(Box.createHorizontalStrut(80)); 
         leftPanel.add(prevButton);
         leftPanel.add(Box.createHorizontalGlue());
 
@@ -224,8 +218,7 @@ public class Intro {
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.X_AXIS));
         rightPanel.add(Box.createHorizontalGlue());
         rightPanel.add(nextButton);
-        rightPanel.add(Box.createHorizontalStrut(80)); // 40% closer from edge
-
+        rightPanel.add(Box.createHorizontalStrut(80)); 
         frame.add(leftPanel, BorderLayout.WEST);
         frame.add(rightPanel, BorderLayout.EAST);
         frame.revalidate();
@@ -241,7 +234,6 @@ public class Intro {
                 if (selectionListener != null) {
                     selectionListener.onStarterChosen(chosenStarterId);
                 }
-                // Show loading screen on intro frame before disposing
                 showLoadingScreenOnFrame();
             }
         });
@@ -271,7 +263,6 @@ public class Intro {
         }
     }
 
-    // Floating skip button
     private void showSkipButton() {
         JButton skipButton = ButtonStyle.createButton("SKIP");
 
@@ -331,7 +322,6 @@ public class Intro {
         return b;
     }
 
-    // Show loading screen on the intro frame
     public void showLoadingScreenOnFrame() {
         if (frame == null) return;
         
@@ -349,7 +339,6 @@ public class Intro {
         frame.revalidate();
         frame.repaint();
         
-        // Dispose frame after loading screen completes
         Timer disposeTimer = new Timer(2500, e -> {
             if (frame != null) {
                 frame.dispose();
@@ -360,29 +349,23 @@ public class Intro {
     }
 
     private BufferedImage loadPokemonImage(int pokemonId, int width, int height) {
-        // Format Pokemon ID to 4 digits (e.g., 1 -> 0001.png)
         String fileName = String.format("%04d.png", pokemonId);
         String imagePath = "firered-leafgreen/" + fileName;
         
-        // Try to load the image
         java.io.File imageFile = new java.io.File(imagePath);
         
         if (imageFile.exists()) {
-            // Load image from file
             ImageIcon icon = new ImageIcon(imageFile.getAbsolutePath());
             Image img = icon.getImage();
             
-            // Create buffered image and scale it
             BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = b.createGraphics();
             
-            // Draw the image scaled to the target size
             g.drawImage(img, 0, 0, width, height, null);
             g.dispose();
             
             return b;
         } else {
-            // If image not found, create a black image with error message
             BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = b.createGraphics();
             g.setColor(Color.BLACK);

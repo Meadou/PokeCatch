@@ -33,7 +33,6 @@ public class MusicPlayer {
         }
     }
 
-    // Play a short sound effect once (non-blocking)
     public static void playOnce(String resourcePath) {
         new Thread(() -> {
             try {
@@ -47,7 +46,6 @@ public class MusicPlayer {
                 Clip sfxClip = AudioSystem.getClip();
                 sfxClip.open(audioIn);
                 sfxClip.start();
-                // Close clip when done
                 sfxClip.addLineListener(event -> {
                     if (event.getType() == LineEvent.Type.STOP) {
                         sfxClip.close();

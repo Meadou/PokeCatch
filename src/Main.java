@@ -1,4 +1,3 @@
-import Logic.FileHandler;
 import Logic.GameState;
 import Logic.PlayerDataManager;
 import Logic.Util;
@@ -10,17 +9,16 @@ import View.NameDialog;
 import View.StageManager;
 import View.intro_GUI;
 import java.awt.*;
-import java.util.List;
 import java.util.Scanner;
 import javax.swing.*;
 import pkmn.Pokemon;
 
 public class Main {
-    private static boolean isDialogShowing = false;
     private static Scanner scanner = new Scanner(System.in);
     
     public static void main(String[] args) {
         System.out.println("PokeCatch Game Starting...");
+        System.out.println("Pokecatch is running....");
         
         SwingUtilities.invokeLater(() -> {
             new intro_GUI.MainFrame();
@@ -42,7 +40,6 @@ public class Main {
             System.out.println("Continuing from stage " + startStage);
             SwingUtilities.invokeLater(() -> startStageSequence(startStage));
         } else {
-            // Show loading on menu frame if it exists
             if (menuFrame != null) {
                 showLoadingOnFrame(menuFrame, () -> {
                     menuFrame.setVisible(false);
@@ -77,7 +74,6 @@ public class Main {
                     });
                 });
             } else {
-                // No menu frame, just start intro
                 SwingUtilities.invokeLater(() -> {
                     music.playLoop("/Music/pallet_town_theme.wav");
                     Intro introScreen = new Intro();
@@ -113,32 +109,6 @@ public class Main {
     public static void startStageWithLoading(int nextStage, java.awt.Component parent) {
         SwingUtilities.invokeLater(() -> startStageSequence(nextStage));
     }
-
-    public static void showLeaderboards() {
-        System.out.println("\n=== LEADERBOARDS ===");
-        List<FileHandler.LeaderboardEntry> entries = FileHandler.loadLeaderboards();
-        
-        if (entries.isEmpty()) {
-            System.out.println("No leaderboard entries yet!");
-            return;
-        }
-        
-        System.out.printf("%-20s %-15s %-10s %-15s %-15s%n", 
-                         "Name", "Starter ID", "Score", "Unique Pokemon", "Stages");
-        System.out.println("--------------------------------------------------------------------------------");
-        
-        int rank = 1;
-        for (FileHandler.LeaderboardEntry entry : entries) {
-            System.out.printf("%-20s %-15d %-10d %-15d %-15d%n",
-                            entry.name, entry.starterId, entry.score, 
-                            entry.uniquePokemon, entry.stagesCompleted);
-            rank++;
-            if (rank > 10) break;
-        }
-        
-        System.out.println("\nPress Enter to continue...");
-        scanner.nextLine();
-    }
     
     public static void startNewGame() {
         startNewGame(null);
@@ -157,7 +127,6 @@ public class Main {
         GameState gameState = GameState.getInstance();
         PlayerDataManager.startNewGame(gameState, playerName, -1);
 
-        // Convert Frame to JFrame
         JFrame menuFrame = null;
         if (owner instanceof JFrame) {
             menuFrame = (JFrame) owner;
@@ -186,16 +155,6 @@ public class Main {
         new ChooseMap();
     }
 
-    private static int getIntInput() {
-        while (true) {
-            try {
-                String input = scanner.nextLine().trim();
-                return Integer.parseInt(input);
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid input. Please enter a number: ");
-            }
-        }
-    }
 
     private static void showLoadingOnFrame(JFrame frame, Runnable onComplete) {
         if (frame == null) return;
@@ -228,24 +187,5 @@ public class Main {
 
     private static void startStageSequence(int startStage) {
         StageManager.stageSelector(startStage);
-    }
-
-    private static void showPostStageOptions(int lastStage) {
-        if (isDialogShowing) {
-            System.out.println("Dialog already showing");
-            return;
-        }
-        isDialogShowing = true;
-        System.out.println("Post stage options for stage: " + lastStage);
-
-        GameState gameState = GameState.getInstance();
-        gameState.transferCaughtPokemonToBST();
-        
-        Logic.Stage currStage = gameState.getCurrentStage();
-        if (currStage != null) {
-            StageManager.nextStage(currStage);
-        }
-        
-        isDialogShowing = false;
     }
 }

@@ -1,19 +1,16 @@
 package maps;
 
-import View.PokedexFrame;
-import View.intro_GUI;
 import Logic.GameState;
 import Logic.Stage;
-import Logic.Util;
-import Music.MusicPlayer;
-import ui.PokeGamePanel;
-
-import javax.swing.*;
+import View.PokedexFrame;
+import View.intro_GUI;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.util.ArrayList;
 import java.util.Objects;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import ui.PokeGamePanel;
 
 public class ChooseMap extends JFrame {
 
@@ -24,7 +21,6 @@ public class ChooseMap extends JFrame {
         return mapPanels;
     }
 
-    // Stages
     public static Stage stage1 = new Stage("grass", new Logic.Util().initializeStage1Pokemon(), true);
     public static Stage stage2 = new Stage("cave", new Logic.Util().initializeStage2Pokemon(), false);
     public static Stage stage3 = new Stage("ocean", new Logic.Util().initializeStage3Pokemon(), false);
@@ -40,7 +36,6 @@ public class ChooseMap extends JFrame {
         BackgroundPanel content = new BackgroundPanel("/ChooseMapResources/background.png");
         setContentPane(content);
 
-        // Title
         JLabel titleLabel = new JLabel("Choose Map");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
@@ -52,7 +47,6 @@ public class ChooseMap extends JFrame {
         int imageW = (1280 - marginX * 2 - gap) / 2;
         int imageH = (720 - marginTop - marginBottom - gap) / 2;
 
-        // Map panels
         ImagePanel grass = new ImagePanel("/ChooseMapResources/grass.png", "grass", stage1.isUnlocked);
         grass.setBounds(marginX, marginTop, imageW, imageH);
 
@@ -104,8 +98,6 @@ public class ChooseMap extends JFrame {
                 }
             });
         }
-
-        // Choose button
         JButton chooseButton = new JButton("Choose");
         chooseButton.setBackground(Color.RED);
         chooseButton.setForeground(Color.WHITE);
@@ -130,7 +122,6 @@ public class ChooseMap extends JFrame {
             }
         });
 
-        // Back button
         try {
             ImageIcon backIcon = new ImageIcon(Objects.requireNonNull(
                     getClass().getResource("/ChooseMapResources/back_button.png")));
@@ -148,7 +139,6 @@ public class ChooseMap extends JFrame {
             });
         } catch (Exception e) { e.printStackTrace(); }
 
-        // View Pokedex button
         JButton pokedexButton = new JButton("View Pokedex");
         pokedexButton.setBounds(20, 620, 180, 50);
         pokedexButton.setFont(new Font("Arial", Font.BOLD, 18));
@@ -192,7 +182,6 @@ public class ChooseMap extends JFrame {
         new PokeGamePanel(selectedStage);
     }
 
-    // Background panel
     static class BackgroundPanel extends JPanel {
         private BufferedImage background;
         public BackgroundPanel(String resourcePath) {
@@ -207,7 +196,6 @@ public class ChooseMap extends JFrame {
         }
     }
 
-    // Image panel
     static class ImagePanel extends JPanel {
         private BufferedImage image;
         private boolean selected = false;

@@ -15,7 +15,7 @@ public class Loading_Screen extends JPanel {
 
     private Timer timer;
     private int elapsedTicks = 0;
-    private int animationDuration; // Duration in milliseconds
+    private int animationDuration;
     private Color backgroundColor;
 
     private BufferedImage pokeballImage;
@@ -45,7 +45,6 @@ public class Loading_Screen extends JPanel {
             }
             active = true;
 
-            // Bounce animation
             if (bouncingUp) {
                 bounceOffset -= 1.2;
                 if (bounceOffset <= -12) bouncingUp = false;
@@ -74,12 +73,10 @@ public class Loading_Screen extends JPanel {
 
     private Pokeball[] pokeballs;
 
-    //Constructor with default values
     public Loading_Screen() {
-        this(1500, 0x000000); // Default: 1.5 seconds, black background
+        this(1500, 0x000000); 
     }
     
-    //Constructor with custom duration and color
     public Loading_Screen(int durationMs, int colorHex) {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         this.animationDuration = durationMs;
@@ -101,7 +98,6 @@ public class Loading_Screen extends JPanel {
                 new Pokeball(20, WIDTH / 2 + 60, centerY, size)
         };
 
-        // Calculate number of ticks based on duration (30ms per tick)
         int totalTicks = animationDuration / 30;
         
         timer = new Timer(30, new ActionListener() {
@@ -113,7 +109,6 @@ public class Loading_Screen extends JPanel {
                     p.update();
                 }
 
-                // Stop after specified duration
                 if (elapsedTicks >= totalTicks) {
                     timer.stop();
 
@@ -131,7 +126,6 @@ public class Loading_Screen extends JPanel {
 
     }
 
-    // ================= DRAW =================
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -150,20 +144,18 @@ public class Loading_Screen extends JPanel {
         Font font = new Font("Press Start 2P", Font.PLAIN, 12);
 
         g2d.setFont(font);
-        // Use white text for good contrast against the Pokedex blue
         g2d.setColor(Color.WHITE);
 
         FontMetrics fm = g2d.getFontMetrics(font);
         int textWidth = fm.stringWidth(loadingText);
 
         int x = (getWidth() - textWidth) / 2;
-        int y = getHeight() - 40; // bottom spacing
+        int y = getHeight() - 40;
 
         g2d.drawString(loadingText, x, y);
 
     }
 
-    // ================= MAIN =================
     public static void main(String[] args) {
         JFrame frame = new JFrame("Loading...");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

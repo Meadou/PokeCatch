@@ -4,7 +4,6 @@ public class GameProgress {
 
     private final ChooseMap chooseMap;
 
-    // Unlock flags for each stage
     public boolean grassUnlocked = true;
     public boolean caveUnlocked  = false;
     public boolean oceanUnlocked = false;

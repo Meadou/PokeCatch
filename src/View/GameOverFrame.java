@@ -35,7 +35,6 @@ public class GameOverFrame extends JFrame {
         });
 
         mainmenu.addActionListener(e -> {
-            // Relaunch main menu frame
             new intro_GUI.MainFrame();
             dispose();
         });

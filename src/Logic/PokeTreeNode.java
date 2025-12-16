@@ -6,7 +6,6 @@ public class PokeTreeNode {
     public Pokemon pokemon;
     public PokeTreeNode left;
     public PokeTreeNode right;
-    // position for rendering
     public int x;
     public int y;
 

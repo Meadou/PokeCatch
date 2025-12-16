@@ -1,14 +1,12 @@
 package View;
 
-import javax.swing.*;
-
 import View.intro_GUI.MainFrame;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.util.ArrayList;
 import java.util.Objects;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class ChooseMap extends JFrame {
 
@@ -29,7 +27,6 @@ public class ChooseMap extends JFrame {
                 new BackgroundPanel("/ChooseMapResources/background.png");
         setContentPane(content);
 
-        /* ================= BACK BUTTON ================= */
         try {
             ImageIcon backIcon = new ImageIcon(Objects.requireNonNull(
                     getClass().getResource("/ChooseMapResources/back_button.png")));
@@ -51,7 +48,6 @@ public class ChooseMap extends JFrame {
             e.printStackTrace();
         }
 
-        /* ================= TITLE ================= */
         JLabel titleLabel = new JLabel("Choose Map");
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 48));
@@ -59,7 +55,6 @@ public class ChooseMap extends JFrame {
         titleLabel.setBounds(0, 20, 1280, 60);
         content.add(titleLabel);
 
-        /* ================= MAP PANELS ================= */
         int marginX = 100, marginTop = 100, marginBottom = 200, gap = 50;
         int imageW = (1280 - marginX * 2 - gap) / 2;
         int imageH = (720 - marginTop - marginBottom - gap) / 2;
@@ -122,7 +117,6 @@ public class ChooseMap extends JFrame {
             });
         }
 
-        /* ================= CHOOSE BUTTON ================= */
         JButton chooseButton = new JButton("Choose");
         chooseButton.setBackground(Color.RED);
         chooseButton.setForeground(Color.WHITE);
@@ -155,13 +149,11 @@ public class ChooseMap extends JFrame {
             }
         });
 
-        /* ================= APPLY UNLOCK STATES ================= */
         updateMapsFromStageManager();
 
         setVisible(true);
     }
 
-    /* ================= UNLOCK SYNC ================= */
     private void updateMapsFromStageManager() {
         for (ImagePanel panel : mapPanels) {
             switch (panel.getName()) {
@@ -180,7 +172,6 @@ public class ChooseMap extends JFrame {
     }
 }
 
-/* ================= BACKGROUND PANEL ================= */
 class BackgroundPanel extends JPanel {
 
     private BufferedImage background;
@@ -209,7 +200,6 @@ class BackgroundPanel extends JPanel {
     }
 }
 
-/* ================= IMAGE PANEL ================= */
 class ImagePanel extends JPanel {
 
     private BufferedImage image;
